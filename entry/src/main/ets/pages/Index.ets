@@ -1,20 +1,46 @@
+import SettingsTab from '../views/SettingsTab'
+import ShelfTab from '../views/ShelfTab'
+import StarTab from '../views/StarTab'
+import SummaryTab from '../views/SummaryTab'
+import { SymbolGlyphModifier } from '@kit.ArkUI'
+
+const readerStorage = LocalStorage.getShared()
+
 @Entry
 @Component
 struct Index {
-  @State message: string = 'Hello World';
-
   build() {
-    RelativeContainer() {
-      Text(this.message)
-        .id('HelloWorld')
-        .fontSize(50)
-        .fontWeight(FontWeight.Bold)
-        .alignRules({
-          center: { anchor: '__container__', align: VerticalAlign.Center },
-          middle: { anchor: '__container__', align: HorizontalAlign.Center }
-        })
+    Tabs() {
+      // 书架
+      TabContent() {
+        ShelfTab({}, readerStorage)
+      }.tabBar(BottomTabBarStyle.of({
+        normal: new SymbolGlyphModifier($r('sys.symbol.bookshelf'))
+      }, '书架'))
+
+      // 统计
+      TabContent() {
+        SummaryTab()
+      }.tabBar(BottomTabBarStyle.of({
+        normal: new SymbolGlyphModifier($r('sys.symbol.exercise_records'))
+      }, '统计'))
+
+      // 设置
+      TabContent() {
+        SettingsTab()
+      }.tabBar(BottomTabBarStyle.of({
+        normal: new SymbolGlyphModifier($r('sys.symbol.handwriting_set'))
+      }, '设置'))
+
+      // 收藏
+      TabContent() {
+        StarTab()
+      }.tabBar(BottomTabBarStyle.of({
+        normal: new SymbolGlyphModifier($r('sys.symbol.heart_square_stack'))
+      }, '收藏'))
     }
-    .height('100%')
-    .width('100%')
+    .divider({strokeWidth: 0.5})
+    .barPosition(BarPosition.End)
+    .animationMode(AnimationMode.NO_ANIMATION)
   }
 }
