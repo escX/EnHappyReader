@@ -13,13 +13,9 @@ interface TextLineMark {
 
 }
 
-interface TextLineMetaData extends TextLineLocation, TextLineMark {
-
-}
-
-interface ParseParams {
+interface ParseLocationParams {
   uiContext: UIContext
-  constraintWidth: number
+  lineWidth: number
   fontSize: number
   lineHeight: number
   fontWeight: FontWeight
@@ -39,9 +35,9 @@ class TextLineReader {
     return px2vp(textSize.height as number) - Constants.DEFAULT_FONT_SIZE * Constants.DEFAULT_LINE_HEIGHT_RATIO // 减去一个换行符的高度
   }
 
-  parse(params: ParseParams) {
-    return new Promise<Array<TextLineMetaData>>((resolve, reject) => {
-      const metaData: Array<TextLineMetaData> = []
+  parseLocation(params: ParseLocationParams) {
+    return new Promise<Array<TextLineLocation>>((resolve, reject) => {
+      const metaData: Array<TextLineLocation> = []
       let currStart: number = 0
 
       fs.readLines(this.filePath, { encoding: 'utf-8' }).then((readerIterator: fs.ReaderIterator) => {
@@ -52,7 +48,7 @@ class TextLineReader {
             end: currStart + textLength - 1,
             height: this.parseTextHeight(params.uiContext, {
               textContent: it.value,
-              constraintWidth: params.constraintWidth,
+              constraintWidth: params.lineWidth,
               fontSize: params.fontSize,
               lineHeight: params.lineHeight,
               fontWeight: params.fontWeight,
@@ -67,7 +63,6 @@ class TextLineReader {
         reject(err.message)
       })
     })
-
   }
 }
 

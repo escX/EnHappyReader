@@ -17,13 +17,15 @@ export default struct TextReaderView {
 
   parseTextLine() {
     if (this.screenW > 0 && this.testLineReader) {
-      this.testLineReader.parse({
+      this.testLineReader.parseLocation({
         uiContext: this.uiContext,
-        constraintWidth: this.screenW,
+        lineWidth: this.screenW - Constants.SCREEN_MARGIN_X * 2,
         fontSize: Constants.DEFAULT_FONT_SIZE,
         lineHeight: Constants.DEFAULT_LINE_HEIGHT_RATIO * Constants.DEFAULT_FONT_SIZE,
         fontWeight: Constants.DEFAULT_FONT_WEIGHT,
         fontFamily: Constants.DEFAULT_FONT_FAMILY,
+      }).then((data) => {
+        console.log('testyy', JSON.stringify(data))
       })
     }
   }

@@ -1,7 +1,7 @@
 import { BuilderNode, FrameNode, NodeController } from '@kit.ArkUI'
 import Constants from '../common/Constants'
 
-export class TextObj {
+class TextObj {
   public content: string = ''
   public lineIndex: number = -1
 
@@ -9,28 +9,6 @@ export class TextObj {
     this.content = content
     this.lineIndex = lineIndex
   }
-}
-
-@Builder
-function TextBuilder(params: Array<TextObj>) {
-  Text(){
-    ForEach(
-      params,
-      (obj: TextObj) => (
-        Span(obj.content)
-      ),
-      (obj: TextObj) => {
-        return obj.lineIndex.toString()
-      }
-    )
-  }
-  .width('100%')
-  .padding({left: Constants.SCREEN_MARGIN_X, right: Constants.SCREEN_MARGIN_X})
-  .copyOption(CopyOptions.InApp)
-  .fontSize(Constants.DEFAULT_FONT_SIZE)
-  .lineHeight(Constants.DEFAULT_LINE_HEIGHT_RATIO * Constants.DEFAULT_FONT_SIZE)
-  .fontWeight(Constants.DEFAULT_FONT_WEIGHT)
-  .fontFamily(Constants.DEFAULT_FONT_FAMILY)
 }
 
 class TextNodeController extends NodeController {
@@ -53,4 +31,27 @@ class TextNodeController extends NodeController {
   }
 }
 
+@Builder
+function TextBuilder(params: Array<TextObj>) {
+  Text(){
+    ForEach(
+      params,
+      (obj: TextObj) => (
+      Span(obj.content)
+      ),
+      (obj: TextObj) => {
+        return obj.lineIndex.toString()
+      }
+    )
+  }
+  .width('100%')
+  .padding({left: Constants.SCREEN_MARGIN_X, right: Constants.SCREEN_MARGIN_X})
+  .copyOption(CopyOptions.InApp)
+  .fontSize(Constants.DEFAULT_FONT_SIZE)
+  .lineHeight(Constants.DEFAULT_LINE_HEIGHT_RATIO * Constants.DEFAULT_FONT_SIZE)
+  .fontWeight(Constants.DEFAULT_FONT_WEIGHT)
+  .fontFamily(Constants.DEFAULT_FONT_FAMILY)
+}
+
+export { TextObj }
 export default TextNodeController
