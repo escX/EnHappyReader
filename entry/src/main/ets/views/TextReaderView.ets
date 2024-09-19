@@ -1,12 +1,12 @@
 import Constants from '../common/Constants'
 import TextLineReader from '../domain/TextLineReader'
-import TextNodeController from '../domain/TextNodeController'
+import TextNodeController, { TextObj } from '../domain/TextNodeController'
 
 @Component
 export default struct TextReaderView {
   @Watch('parseTextLine') @State testLineReader: TextLineReader | null = null
   private textNodeController: TextNodeController = new TextNodeController()
-  private startIndex: number = 0
+  private startLineIndex: number = 0
   private uiContext: UIContext = this.getUIContext()
   @Require @Prop bookPath: string | undefined
   @Require @Watch('parseTextLine') @Prop screenW: number

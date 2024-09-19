@@ -1,19 +1,27 @@
 import { BuilderNode, FrameNode, NodeController } from '@kit.ArkUI'
 import Constants from '../common/Constants'
 
-interface TextParams {
-  text: Array<string>
+export class TextObj {
+  public content: string = ''
+  public lineIndex: number = -1
+
+  constructor(content: string, lineIndex: number) {
+    this.content = content
+    this.lineIndex = lineIndex
+  }
 }
 
 @Builder
-function TextBuilder(params: TextParams) {
+function TextBuilder(params: Array<TextObj>) {
   Text(){
     ForEach(
-      params.text,
-      (lineText: string) => (
-        Span(lineText)
+      params,
+      (obj: TextObj) => (
+        Span(obj.content)
       ),
-      (item: string) => { return item }
+      (obj: TextObj) => {
+        return obj.lineIndex.toString()
+      }
     )
   }
   .width('100%')
@@ -26,21 +34,21 @@ function TextBuilder(params: TextParams) {
 }
 
 class TextNodeController extends NodeController {
-  private textArray: Array<string> = []
+  private textArray: Array<TextObj> = []
 
   makeNode(uiContext: UIContext): FrameNode | null {
-    const textNode = new BuilderNode<[TextParams]>(uiContext)
-    textNode.build(wrapBuilder<[TextParams]>(TextBuilder), {text: this.textArray})
+    const textNode = new BuilderNode<[Array<TextObj>]>(uiContext)
+    textNode.build(wrapBuilder<[Array<TextObj>]>(TextBuilder), this.textArray)
     return textNode.getFrameNode()
   }
 
-  append(text: string[]) {
-    this.textArray.push(...text)
+  append(textObj: Array<TextObj>) {
+    this.textArray.push(...textObj)
     this.rebuild()
   }
 
-  prepend(text: string[]) {
-    this.textArray.unshift(...text)
+  prepend(textObj: Array<TextObj>) {
+    this.textArray.unshift(...textObj)
     this.rebuild()
   }
 }
