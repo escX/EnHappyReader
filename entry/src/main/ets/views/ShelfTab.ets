@@ -1,18 +1,21 @@
-import { common } from '@kit.AbilityKit'
 import { router } from '@kit.ArkUI'
-import { copyFromUser, FileInfo, getFilesInfo } from '../common/FsUtils'
+import ShelfHelper, { BookInfo } from '../domain/ShelfHelper'
 
 @Component
 export default struct ShelfTab {
-  @State fileList: Array<FileInfo> = []
+  @State bookList: Array<BookInfo> = []
   @LocalStorageLink('currBookPath') bookPath: string | undefined = undefined
-  private context = getContext(this) as common.UIAbilityContext
+  private context = getContext()
+  private shelfHelper: ShelfHelper = new ShelfHelper(this.context)
 
   aboutToAppear() {
-    getFilesInfo(this.context)
-      .then((files) => {
-        this.fileList = files
-      })
+    this.setBookList()
+  }
+
+  setBookList() {
+    this.shelfHelper.getAppBooks().then((files) => {
+      this.bookList = files
+    })
   }
 
   build() {
@@ -22,20 +25,16 @@ export default struct ShelfTab {
           .buttonStyle(ButtonStyleMode.TEXTUAL)
           .stateEffect(false)
           .onClick(() => {
-            copyFromUser(this.context)
-              .then(() => {
-                return getFilesInfo(this.context)
-              })
-              .then((files) => {
-                this.fileList = files
-              })
+            this.shelfHelper.copyBookFromUser().then(() => {
+              this.setBookList()
+            })
           })
       }
       .width('100%')
       .justifyContent(FlexAlign.End)
 
       List({space: 2}) {
-        ForEach(this.fileList, (item: FileInfo) => {
+        ForEach(this.bookList, (item: BookInfo) => {
           ListItem() {
             Text(item.name)
           }

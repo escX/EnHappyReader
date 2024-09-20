@@ -1,5 +1,4 @@
 import { window, display } from '@kit.ArkUI'
-import { common } from '@kit.AbilityKit'
 import Constants from '../common/Constants'
 import TextReaderView from '../views/TextReaderView'
 
@@ -11,9 +10,9 @@ struct Reader {
   @LocalStorageProp('currBookPath') bookPath: string | undefined = undefined
   private stateHeight: number = 0
   private naviHeight: number = 0
-  private screenH: number = 0
+  @State screenH: number = 0
   @State screenW: number = 0
-  private context = getContext(this) as common.UIAbilityContext
+  private context = getContext()
   private windowClass: window.Window | null = null
   private initSystemBarProps: window.SystemBarProperties | null = null
 
@@ -75,7 +74,7 @@ struct Reader {
 
   build() {
     Column(){
-      TextReaderView({bookPath: this.bookPath, screenW: this.screenW})
+      TextReaderView({bookPath: this.bookPath, screenW: this.screenW, screenH: this.screenH})
     }
     .width('100%')
     .height('100%')

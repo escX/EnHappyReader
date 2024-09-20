@@ -1,23 +1,29 @@
 import Constants from '../common/Constants'
-import TextLineReader from '../domain/TextLineReader'
-import TextNodeController, { TextObj } from '../domain/TextNodeController'
+import TextParser from '../domain/TextParser'
+import TextNodeController from '../domain/TextNodeController'
+import TextLayouter from '../domain/TextLayouter'
 
 @Component
 export default struct TextReaderView {
-  @Watch('parseTextLine') @State testLineReader: TextLineReader | null = null
-  private textNodeController: TextNodeController = new TextNodeController()
-  private startLineIndex: number = 0
   private uiContext: UIContext = this.getUIContext()
-  @Require @Prop bookPath: string | undefined
+  private textNodeController: TextNodeController = new TextNodeController()
+  private textLayouter: TextLayouter | null = null
+  private textParser: TextParser = new TextParser()
+  @Require @Watch('parseTextLine') @Prop bookPath: string | undefined
   @Require @Watch('parseTextLine') @Prop screenW: number
+  @Require @Watch('parseTextLine') @Prop screenH: number
+  private startLineIndex: number = 0 // 首页首行在文件中的索引
+  private maxUpDistance: number = 0 // 最大向上滚动距离
+  private maxDownDistance: number = 0 // 最大向下滚动距离
+  private currScroll: number = 0 // 当前滚动距离
 
   aboutToAppear() {
-    this.testLineReader = new TextLineReader(this.bookPath)
+
   }
 
   parseTextLine() {
-    if (this.screenW > 0 && this.testLineReader) {
-      this.testLineReader.parseLocation({
+    if (!!this.bookPath && this.screenW > 0 && this.screenH > 0) {
+      this.textParser.parseLocation(this.bookPath, {
         uiContext: this.uiContext,
         lineWidth: this.screenW - Constants.SCREEN_MARGIN_X * 2,
         fontSize: Constants.DEFAULT_FONT_SIZE,
@@ -25,7 +31,8 @@ export default struct TextReaderView {
         fontWeight: Constants.DEFAULT_FONT_WEIGHT,
         fontFamily: Constants.DEFAULT_FONT_FAMILY,
       }).then((data) => {
-        console.log('testyy', JSON.stringify(data))
+        this.textLayouter = new TextLayouter(this.startLineIndex, 2, this.screenH, data)
+        const lines = this.textLayouter.getLines(this.maxUpDistance, this.maxDownDistance)
       })
     }
   }
