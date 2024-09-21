@@ -45,7 +45,6 @@ class TextLayouter {
     return new Promise((resolve, reject) => {
       let arrayBuffer = new ArrayBuffer(length)
       let file: fs.File
-      let readLen: number
 
       fs.open(this.filePath, fs.OpenMode.READ_WRITE)
         .then((thisFile) => {
@@ -55,13 +54,10 @@ class TextLayouter {
             length
           })
         })
-        .then((length) => {
-          readLen = length
-          return fs.close(file)
-        })
-        .then(() => {
+        .then((readLen) => {
           let buf = buffer.from(arrayBuffer, 0, readLen)
           resolve(buf.toString())
+          fs.close(file)
         })
         .catch((err: BusinessError) => {
           reject(err)
@@ -123,25 +119,27 @@ class TextLayouter {
     const totalHeight = (this.preRenderPage + 1) * this.pageHeight + downDistance
     const lines: Array<SpanNode> = []
 
-    for(let i = this.startLineIndex, h = 0; i < this.linesLocation.length; i++) {
-      if (h >= totalHeight) {
-        break
-      }
+    const text = await this.getLineText(0, 10)
 
-      const thisLine = this.linesLocation[i]
-      try {
-        const text = await this.getLineText(thisLine.start, thisLine.length)
-        const lineHeight = this.getLineHeight(text)
-
-        h += lineHeight
-        lines.push({
-          content: text,
-          index: i
-        })
-      } catch (err) {
-
-      }
-    }
+    // for(let i = this.startLineIndex, h = 0; i < this.linesLocation.length; i++) {
+    //   if (h >= totalHeight) {
+    //     break
+    //   }
+    //
+    //   const thisLine = this.linesLocation[i]
+    //   try {
+    //     const text = await this.getLineText(thisLine.start, thisLine.length)
+    //     const lineHeight = this.getLineHeight(text)
+    //
+    //     h += lineHeight
+    //     lines.push({
+    //       content: text,
+    //       index: i
+    //     })
+    //   } catch (err) {
+    //
+    //   }
+    // }
 
     return lines
   }
