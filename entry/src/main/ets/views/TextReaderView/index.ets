@@ -22,9 +22,25 @@ export default struct TextReaderView {
 
   parseTextLine() {
     if (!!this.bookPath && this.screenW > 0 && this.screenH > 0) {
-      parseLocation(this.bookPath).then((data) => {
-        this.textLayouter = new TextLayouter(this.startLineIndex, 2, this.screenH, data)
-        const lines = this.textLayouter.getLines(this.maxUpDistance, this.maxDownDistance)
+      parseLocation(this.bookPath).then((linesLocation) => {
+        this.textLayouter = new TextLayouter({
+          uiContext: this.uiContext,
+          filePath: this.bookPath!,
+          startLineIndex: this.startLineIndex,
+          preRenderPage: 2,
+          pageHeight: this.screenH,
+          linesLocation,
+          textStyle: {
+            lineWidth: this.screenW - Constants.SCREEN_MARGIN_X * 2,
+            fontSize: Constants.DEFAULT_FONT_SIZE,
+            lineHeight: Constants.DEFAULT_LINE_HEIGHT_RATIO * Constants.DEFAULT_FONT_SIZE,
+            fontWeight: Constants.DEFAULT_FONT_WEIGHT,
+            fontFamily: Constants.DEFAULT_FONT_FAMILY,
+          }
+        })
+        this.textLayouter.getUnderLines(0).then((data) => {
+          this.textNodeController.append(data)
+        })
       })
     }
   }

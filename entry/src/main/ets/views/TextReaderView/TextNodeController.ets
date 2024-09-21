@@ -1,43 +1,38 @@
 import { BuilderNode, FrameNode, NodeController } from '@kit.ArkUI'
 import Constants from '../../common/Constants'
 
-interface TextLineData {
+interface SpanNode {
   content: string
   index: number
 }
 
 class TextNodeController extends NodeController {
-  private textArray: Array<TextLineData> = []
+  private textArray: Array<SpanNode> = []
 
   makeNode(uiContext: UIContext): FrameNode | null {
-    const textNode = new BuilderNode<[Array<TextLineData>]>(uiContext)
-    textNode.build(wrapBuilder<[Array<TextLineData>]>(TextBuilder), this.textArray)
+    const textNode = new BuilderNode<[Array<SpanNode>]>(uiContext)
+    textNode.build(wrapBuilder<[Array<SpanNode>]>(TextBuilder), this.textArray)
     return textNode.getFrameNode()
   }
 
-  append(lineArray: Array<TextLineData>) {
+  append(lineArray: Array<SpanNode>) {
     this.textArray.push(...lineArray)
     this.rebuild()
   }
 
-  prepend(lineArray: Array<TextLineData>) {
+  prepend(lineArray: Array<SpanNode>) {
     this.textArray.unshift(...lineArray)
-    this.rebuild()
-  }
-
-  setLines(lineArray: Array<TextLineData>) {
-    this.textArray = lineArray
     this.rebuild()
   }
 }
 
 @Builder
-function TextBuilder(params: Array<TextLineData>) {
+function TextBuilder(params: Array<SpanNode>) {
   Text(){
     ForEach(
       params,
-      (obj: TextLineData) => Span(obj.content),
-      (obj: TextLineData) => obj.index.toString()
+      (obj: SpanNode) => Span(obj.content),
+      (obj: SpanNode) => obj.index.toString()
     )
   }
   .width('100%')
@@ -49,4 +44,5 @@ function TextBuilder(params: Array<TextLineData>) {
   .fontFamily(Constants.DEFAULT_FONT_FAMILY)
 }
 
+export { SpanNode }
 export default TextNodeController

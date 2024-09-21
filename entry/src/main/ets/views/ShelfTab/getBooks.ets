@@ -8,6 +8,11 @@ interface BookInfo {
   atime: number
 }
 
+/**
+ * 获取应用文件
+ * @param context Context
+ * @returns Promise: 文件信息列表
+ */
 function getBooks(context: Context): Promise<Array<BookInfo>> {
   return new Promise((resolve, reject) => {
     let filenames: Array<string> = []

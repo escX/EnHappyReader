@@ -4,6 +4,11 @@ import { BusinessError } from '@kit.BasicServicesKit'
 import { fileUri } from '@kit.CoreFileKit'
 import Constants from '../../common/Constants'
 
+/**
+ * 从用户文件中导入
+ * @param context Context
+ * @returns Promise: 完成导入
+ */
 function importBook(context: Context): Promise<void> {
   return new Promise((resolve, reject) => {
     const documentPicker = new picker.DocumentViewPicker(context)
