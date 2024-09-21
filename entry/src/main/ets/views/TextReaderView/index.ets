@@ -1,14 +1,13 @@
-import Constants from '../common/Constants'
-import TextParser from '../domain/TextParser'
-import TextNodeController from '../domain/TextNodeController'
-import TextLayouter from '../domain/TextLayouter'
+import Constants from '../../common/Constants'
+import { parseLocation } from './TextParser'
+import TextNodeController from './TextNodeController'
+import TextLayouter from './TextLayouter'
 
 @Component
 export default struct TextReaderView {
   private uiContext: UIContext = this.getUIContext()
   private textNodeController: TextNodeController = new TextNodeController()
   private textLayouter: TextLayouter | null = null
-  private textParser: TextParser = new TextParser()
   @Require @Watch('parseTextLine') @Prop bookPath: string | undefined
   @Require @Watch('parseTextLine') @Prop screenW: number
   @Require @Watch('parseTextLine') @Prop screenH: number
@@ -23,14 +22,7 @@ export default struct TextReaderView {
 
   parseTextLine() {
     if (!!this.bookPath && this.screenW > 0 && this.screenH > 0) {
-      this.textParser.parseLocation(this.bookPath, {
-        uiContext: this.uiContext,
-        lineWidth: this.screenW - Constants.SCREEN_MARGIN_X * 2,
-        fontSize: Constants.DEFAULT_FONT_SIZE,
-        lineHeight: Constants.DEFAULT_LINE_HEIGHT_RATIO * Constants.DEFAULT_FONT_SIZE,
-        fontWeight: Constants.DEFAULT_FONT_WEIGHT,
-        fontFamily: Constants.DEFAULT_FONT_FAMILY,
-      }).then((data) => {
+      parseLocation(this.bookPath).then((data) => {
         this.textLayouter = new TextLayouter(this.startLineIndex, 2, this.screenH, data)
         const lines = this.textLayouter.getLines(this.maxUpDistance, this.maxDownDistance)
       })

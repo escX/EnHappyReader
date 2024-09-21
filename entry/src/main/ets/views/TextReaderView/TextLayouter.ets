@@ -24,7 +24,7 @@ class TextLayouter {
 
       const thisLine = this.linesLocation[i]
       lines.unshift(thisLine)
-      h += thisLine.height
+      // h += thisLine.height
     }
 
     return lines
@@ -41,7 +41,7 @@ class TextLayouter {
 
       const thisLine = this.linesLocation[i]
       lines.push(thisLine)
-      h += thisLine.height
+      // h += thisLine.height
     }
 
     return lines

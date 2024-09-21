@@ -1,5 +1,5 @@
 @Component
-export default struct SettingsTab {
+export default struct SettingTab {
   build() {
     Text('设置')
   }

@@ -1,7 +1,7 @@
-import SettingsTab from '../views/SettingsTab'
-import ShelfTab from '../views/ShelfTab'
-import StarTab from '../views/StarTab'
-import SummaryTab from '../views/SummaryTab'
+import SettingTab from '../views/SettingTab/index'
+import ShelfTab from '../views/ShelfTab/index'
+import StarTab from '../views/StarTab/index'
+import SummaryTab from '../views/SummaryTab/index'
 import { SymbolGlyphModifier } from '@kit.ArkUI'
 
 const readerStorage = LocalStorage.getShared()
@@ -27,7 +27,7 @@ struct Index {
 
       // 设置
       TabContent() {
-        SettingsTab()
+        SettingTab()
       }.tabBar(BottomTabBarStyle.of({
         normal: new SymbolGlyphModifier($r('sys.symbol.handwriting_set'))
       }, '设置'))

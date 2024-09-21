@@ -1,19 +1,19 @@
 import { router } from '@kit.ArkUI'
-import ShelfHelper, { BookInfo } from '../domain/ShelfHelper'
+import getBooks, { BookInfo } from './getBooks'
+import importBook from './importBook'
 
 @Component
 export default struct ShelfTab {
   @State bookList: Array<BookInfo> = []
   @LocalStorageLink('currBookPath') bookPath: string | undefined = undefined
   private context = getContext()
-  private shelfHelper: ShelfHelper = new ShelfHelper(this.context)
 
   aboutToAppear() {
-    this.setBookList()
+    this.loadBookList()
   }
 
-  setBookList() {
-    this.shelfHelper.getAppBooks().then((files) => {
+  loadBookList() {
+    getBooks(this.context).then((files) => {
       this.bookList = files
     })
   }
@@ -25,8 +25,8 @@ export default struct ShelfTab {
           .buttonStyle(ButtonStyleMode.TEXTUAL)
           .stateEffect(false)
           .onClick(() => {
-            this.shelfHelper.copyBookFromUser().then(() => {
-              this.setBookList()
+            importBook(this.context).then(() => {
+              this.loadBookList()
             })
           })
       }

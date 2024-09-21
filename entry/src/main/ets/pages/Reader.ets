@@ -1,6 +1,6 @@
 import { window, display } from '@kit.ArkUI'
 import Constants from '../common/Constants'
-import TextReaderView from '../views/TextReaderView'
+import TextReaderView from '../views/TextReaderView/index'
 
 const readerStorage = LocalStorage.getShared()
 

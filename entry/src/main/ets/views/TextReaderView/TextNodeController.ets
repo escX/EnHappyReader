@@ -1,5 +1,5 @@
 import { BuilderNode, FrameNode, NodeController } from '@kit.ArkUI'
-import Constants from '../common/Constants'
+import Constants from '../../common/Constants'
 
 interface TextLineData {
   content: string
