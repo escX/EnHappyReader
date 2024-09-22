@@ -78,17 +78,14 @@ class TextLayouter {
   }
 
   private underLinesLoop(totalHeight: number, index: number = this.startLineIndex, linesHeight: number = 0, overLines: Array<SpanNode> = []): Promise<Array<SpanNode>> {
-    console.log(`testyy loop | totalHeight:${totalHeight}, linesHeight:${linesHeight}, index: ${index}, overLinesLen: ${overLines.length}`)
     if (linesHeight >= totalHeight || index >= this.linesLocation.length) {
-      console.log('testyy final')
       return Promise.resolve(overLines)
     }
 
     const thisLine = this.linesLocation[index]
     return this.getLineText(thisLine.byteStart, thisLine.byteLen)
       .then((text) => {
-        console.log(`testyy step | totalHeight:${totalHeight}, lineHeight:${this.getLineHeight(text)}, index: ${index+1}, text:${text}`)
-        return this.overLinesLoop(
+        return this.underLinesLoop(
           totalHeight,
           index + 1,
           linesHeight + this.getLineHeight(text),
