@@ -1,5 +1,5 @@
 import Constants from '../../common/Constants'
-import { parseLocation } from './TextParser'
+import TextParser from './TextParser'
 import TextNodeController from './TextNodeController'
 import TextLayouter from './TextLayouter'
 
@@ -7,6 +7,7 @@ import TextLayouter from './TextLayouter'
 export default struct TextReaderView {
   private uiContext: UIContext = this.getUIContext()
   private textNodeController: TextNodeController = new TextNodeController()
+  private textParser: TextParser = new TextParser()
   private textLayouter: TextLayouter | null = null
   @Require @Watch('parseTextLine') @Prop bookPath: string | undefined
   @Require @Watch('parseTextLine') @Prop screenW: number
@@ -22,7 +23,7 @@ export default struct TextReaderView {
 
   parseTextLine() {
     if (!!this.bookPath && this.screenW > 0 && this.screenH > 0) {
-      parseLocation(this.bookPath).then((linesLocation) => {
+      this.textParser.parseLocation(this.bookPath).then((linesLocation) => {
         this.textLayouter = new TextLayouter({
           uiContext: this.uiContext,
           filePath: this.bookPath!,
@@ -39,6 +40,7 @@ export default struct TextReaderView {
           }
         })
         this.textLayouter.getUnderLines(0).then((data) => {
+          console.log('testyy', JSON.stringify(data))
           this.textNodeController.append(data)
         })
       })
