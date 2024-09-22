@@ -39,12 +39,26 @@ export default struct TextReaderView {
             fontFamily: Constants.DEFAULT_FONT_FAMILY,
           }
         })
-        this.textLayouter.getUnderLines(0).then((data) => {
-          console.log('testyy', JSON.stringify(data))
-          this.textNodeController.append(data)
-        })
+        this.renderNextLine(0)
+        this.renderPrevLine(0)
       })
     }
+  }
+
+  renderNextLine(downDistance: number) {
+    this.textLayouter?.getNextLines(downDistance).then((data) => {
+      if (data.length > 0) {
+        this.textNodeController.append(data)
+      }
+    })
+  }
+
+  renderPrevLine(upDistance: number) {
+    this.textLayouter?.getPrevLines(upDistance).then((data) => {
+      if (data.length > 0) {
+        this.textNodeController.prepend(data)
+      }
+    })
   }
 
   build() {
