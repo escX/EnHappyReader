@@ -41,11 +41,18 @@ class TextLayouter {
   constructor(params: TextLayouterParams) {
     this.uiContext = params.uiContext
     this.filePath = params.filePath
-    this.startLineIndex = params.startLineIndex
     this.preRenderPage = params.preRenderPage
     this.pageHeight = params.pageHeight
     this.linesLocation = params.linesLocation
     this.textStyle = params.textStyle
+
+    if (params.startLineIndex < 0) {
+      this.startLineIndex = 0
+    } else if (params.startLineIndex > params.linesLocation.length - 1) {
+      this.startLineIndex = params.linesLocation.length - 1
+    } else {
+      this.startLineIndex = params.startLineIndex
+    }
   }
 
   private getLineText(byteStart: number, byteLen: number): Promise<string> {

@@ -25,6 +25,7 @@ export default struct ShelfTab {
           .buttonStyle(ButtonStyleMode.TEXTUAL)
           .stateEffect(false)
           .onClick(() => {
+            // todo: 筛选utf-8格式的文件
             importBook(this.context).then(() => {
               this.loadBookList()
             })
