@@ -98,7 +98,6 @@ class TextLayouter {
             content: text,
             index
           })
-          console.log(`testyy prev index:${index}, lineHeight:${lineHeight}, text:${text}`)
           // 保存增量节点数据，计算后将返回这个数据
           return this.prevLinesLoop(
             totalHeight,
@@ -135,7 +134,6 @@ class TextLayouter {
             text,
             height: lineHeight
           }
-          console.log(`testyy next index:${index}, lineHeight:${lineHeight}, text:${text}`)
           // 保存增量节点数据，计算后将返回这个数据
           this.nextLines.push({
             content: text,
@@ -186,6 +184,54 @@ class TextLayouter {
       .then(() => {
         return Promise.resolve(this.nextLines)
       })
+  }
+
+  /**
+   * 获取屏幕上方渲染的总高度
+   * @returns 上方高度
+   */
+  getPrevHeight(): number {
+    let height = 0
+    Object.values(this.prevNodeRecord).forEach(item => {
+      height += item.height
+    })
+    return height
+  }
+
+  /**
+   * 获取屏幕下方渲染的总高度
+   * @returns 下方高度
+   */
+  getNextHeight(): number {
+    let height = 0
+    Object.values(this.nextNodeRecord).forEach(item => {
+      height += item.height
+    })
+    return height
+  }
+
+  /**
+   * 获取屏幕上方，上次增量渲染的高度
+   * @returns 上次增量高度
+   */
+  getIncrementPrevHeight(): number {
+    let height = 0
+    this.prevLines.forEach(item => {
+      height += this.prevNodeRecord[item.index.toString()]?.height ?? 0
+    })
+    return height
+  }
+
+  /**
+   * 获取屏幕下方，上次增量渲染的高度
+   * @returns 上次增量高度
+   */
+  getIncrementNextHeight(): number {
+    let height = 0
+    this.nextLines.forEach(item => {
+      height += this.nextNodeRecord[item.index.toString()]?.height ?? 0
+    })
+    return height
   }
 }
 
