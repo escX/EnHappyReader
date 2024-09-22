@@ -21,6 +21,7 @@ interface TextStyle {
 }
 
 interface NodeRecord {
+  index: number
   text: string
   height: number
 }
@@ -90,6 +91,7 @@ class TextLayouter {
           const lineHeight = this.getLineHeight(text)
           // 缓存记录新增的增量节点数据
           this.prevNodeRecord[index.toString()] = {
+            index,
             text,
             height: lineHeight
           }
@@ -131,6 +133,7 @@ class TextLayouter {
           const lineHeight = this.getLineHeight(text)
           // 缓存记录新增的增量节点数据
           this.nextNodeRecord[index.toString()] = {
+            index,
             text,
             height: lineHeight
           }
@@ -232,6 +235,18 @@ class TextLayouter {
       height += this.nextNodeRecord[item.index.toString()]?.height ?? 0
     })
     return height
+  }
+
+  /**
+   * 获取已渲染的全部文本
+   * @returns 文本字符串
+   */
+  getAllText(): string {
+    const recordArray: Array<NodeRecord> = [
+      ...Object.values(this.prevNodeRecord),
+      ...Object.values(this.nextNodeRecord)
+    ]
+    return recordArray.sort((a, b) => a.index - b.index).map(item => item.text).join('')
   }
 }
 
