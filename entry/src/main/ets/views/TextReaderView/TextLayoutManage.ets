@@ -2,7 +2,7 @@ import fs from '@ohos.file.fs'
 import { TextLineLocation } from './TextParser'
 import { SpanNode } from './TextNodeController'
 
-interface TextLayouterParams {
+interface TextLayoutParams {
   uiContext: UIContext
   filePath: string
   startLineIndex: number
@@ -26,7 +26,7 @@ interface NodeRecord {
   height: number
 }
 
-class TextLayouter {
+class TextLayoutManage {
   private uiContext: UIContext
   private filePath: string
   private startLineIndex: number
@@ -39,7 +39,7 @@ class TextLayouter {
   private prevLines: Array<SpanNode> = [] // 返回向上翻页时增量 Span 数据
   private nextLines: Array<SpanNode> = [] // 返回向下翻页时增量 Span 数据
 
-  constructor(params: TextLayouterParams) {
+  constructor(params: TextLayoutParams) {
     this.uiContext = params.uiContext
     this.filePath = params.filePath
     this.preRenderPage = params.preRenderPage
@@ -250,4 +250,4 @@ class TextLayouter {
   }
 }
 
-export default TextLayouter
+export default TextLayoutManage

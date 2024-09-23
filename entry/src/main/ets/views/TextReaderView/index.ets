@@ -1,29 +1,34 @@
 import Constants from '../../common/Constants'
 import TextParser from './TextParser'
 import TextNodeController from './TextNodeController'
-import TextLayouter from './TextLayouter'
+import TextLayoutManage from './TextLayoutManage'
 import { BusinessError } from '@kit.BasicServicesKit'
+import { display } from '@kit.ArkUI'
 
 @Component
 export default struct TextReaderView {
+  @Require @Prop bookPath: string | undefined
   private uiContext: UIContext = this.getUIContext()
   private textNodeController: TextNodeController = new TextNodeController()
   private textParser: TextParser = new TextParser()
-  private textLayouter: TextLayouter | null = null
+  private textLayoutManage: TextLayoutManage | null = null
   private scroller: Scroller = new Scroller()
-  @Require @Watch('parseTextLine') @Prop bookPath: string | undefined
-  @Require @Watch('parseTextLine') @Prop screenW: number
-  @Require @Watch('parseTextLine') @Prop screenH: number
+  private displaySize: display.Display = display.getDefaultDisplaySync()
+  private screenW: number = px2vp(this.displaySize.width)
+  private screenH: number = px2vp(this.displaySize.height)
   private startLineIndex: number = 0 // 首页首行在文件中的索引
   private maxUpDistance: number = 0 // 最大向上滚动距离
   private maxDownDistance: number = 0 // 最大向下滚动距离
   private scrollOffsetY: number = 0 // 相对初始位置的滚动距离
 
-  // 布局初始化和渲染
-  parseTextLine() {
-    if (!!this.bookPath && this.screenW > 0 && this.screenH > 0) {
+  aboutToAppear() {
+    this.textLayout()
+  }
+
+  textLayout() {
+    if (!!this.bookPath) {
       this.textParser.parseLocation(this.bookPath).then((linesLocation) => {
-        this.textLayouter = new TextLayouter({
+        this.textLayoutManage = new TextLayoutManage({
           uiContext: this.uiContext,
           filePath: this.bookPath!,
           startLineIndex: this.startLineIndex,
@@ -48,7 +53,7 @@ export default struct TextReaderView {
   // 渲染下方的增量 Span
   renderNextLines(downDistance: number): Promise<void> {
     return new Promise((resolve, reject) => {
-      this.textLayouter?.getNextLines(downDistance)
+      this.textLayoutManage?.getNextLines(downDistance)
         .then((data) => {
           if (data.length > 0) {
             this.textNodeController.append(data)
@@ -65,12 +70,12 @@ export default struct TextReaderView {
   // 渲染上方的增量 Span
   renderPrevLines(upDistance: number): Promise<void> {
     return new Promise((resolve, reject) => {
-      this.textLayouter?.getPrevLines(upDistance)
+      this.textLayoutManage?.getPrevLines(upDistance)
         .then((data) => {
           if (data.length > 0) {
             this.textNodeController.prepend(data)
             this.maxUpDistance = upDistance
-            this.scroller.scrollBy(0, this.textLayouter?.getIncrementPrevHeight()) // 滚动容器内容上方增加了高度，需要 ScrollBy 向下滑动这个距离
+            this.scroller.scrollBy(0, this.textLayoutManage?.getIncrementPrevHeight()) // 滚动容器内容上方增加了高度，需要 ScrollBy 向下滑动这个距离
           }
           resolve()
         })

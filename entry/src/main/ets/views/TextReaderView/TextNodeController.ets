@@ -42,6 +42,32 @@ function TextBuilder(params: Array<SpanNode>) {
   .lineHeight(Constants.DEFAULT_LINE_HEIGHT_RATIO * Constants.DEFAULT_FONT_SIZE)
   .fontWeight(Constants.DEFAULT_FONT_WEIGHT)
   .fontFamily(Constants.DEFAULT_FONT_FAMILY)
+  .editMenuOptions( {
+    onCreateMenu: (menuItems: Array<TextMenuItem>) => {
+      return [
+        {id: TextMenuItemId.COPY, content: '复制'},
+        {id: TextMenuItemId.of('translate'), content: '翻译'},
+        {id: TextMenuItemId.of('star'), content: '收藏'},
+        {id: TextMenuItemId.of('share'), content: '分享'},
+      ]
+    },
+    onMenuItemClick: (menuItem: TextMenuItem, textRange: TextRange) => {
+      // todo: 翻译、收藏、分享
+      if (menuItem.id.equals(TextMenuItemId.of('translate'))) {
+        return true
+      }
+
+      if (menuItem.id.equals(TextMenuItemId.of('star'))) {
+        return true
+      }
+
+      if (menuItem.id.equals(TextMenuItemId.of('share'))) {
+        return true
+      }
+
+      return false
+    }
+  })
 }
 
 export { SpanNode }
