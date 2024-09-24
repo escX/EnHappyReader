@@ -5,7 +5,7 @@ import importBook from './importBook'
 @Component
 export default struct ShelfTab {
   @State bookList: Array<BookInfo> = []
-  @LocalStorageLink('currBookPath') bookPath: string | undefined = undefined
+  @LocalStorageLink('currBookPath') currBookPath: string | undefined = undefined
   private context = getContext()
 
   aboutToAppear() {
@@ -49,7 +49,7 @@ export default struct ShelfTab {
             focused: { .backgroundColor('#eeeeee').opacity(0.8) },
           })
           .onClick(() => {
-            this.bookPath = `${this.context.filesDir}/${item.name}`
+            this.currBookPath = `${this.context.filesDir}/${item.name}`
             router.pushUrl({ url: 'pages/Reader' })
           })
         })

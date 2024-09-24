@@ -4,10 +4,9 @@ import TextReaderView from '../views/TextReaderView'
 
 const myLocalStorage = LocalStorage.getShared()
 
-@Entry(myLocalStorage)
+@Entry
 @Component
 struct Reader {
-  @LocalStorageProp('currBookPath') bookPath: string | undefined = undefined
   private context = getContext()
   private statusBar: StatusBar = new StatusBar()
 
@@ -23,7 +22,7 @@ struct Reader {
 
   build() {
     Column(){
-      TextReaderView({bookPath: this.bookPath}, myLocalStorage)
+      TextReaderView({}, myLocalStorage)
     }
     .width('100%')
     .height('100%')

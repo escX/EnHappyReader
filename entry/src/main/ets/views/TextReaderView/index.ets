@@ -3,23 +3,19 @@ import TextParser from './TextParser'
 import TextNodeController from './TextNodeController'
 import TextLayoutManage from './TextLayoutManage'
 import { BusinessError } from '@kit.BasicServicesKit'
-import { display } from '@kit.ArkUI'
-import StatusBar from '../../common/StatusBar'
 
 @Component
 export default struct TextReaderView {
-  @Require @Prop bookPath: string | undefined
+  @LocalStorageProp('currBookPath') currBookPath: string | undefined = undefined
   @LocalStorageProp('statusBarHeight') statusBarHeight: number = 0
   @LocalStorageProp('naviBarHeight') naviBarHeight: number = 0
   @LocalStorageProp('screenW') screenW: number = 0
   @LocalStorageProp('screenH') screenH: number = 0
   private uiContext: UIContext = this.getUIContext()
-  private context: Context = getContext()
   private textNodeController: TextNodeController = new TextNodeController()
   private textParser: TextParser = new TextParser()
   private textLayoutManage: TextLayoutManage | null = null
   private scroller: Scroller = new Scroller()
-  private statusBar: StatusBar = new StatusBar()
   private startLineIndex: number = 0 // 首页首行在文件中的索引
   private maxUpDistance: number = 0 // 最大向上滚动距离，用于计算需要增量渲染的高度
   private maxDownDistance: number = 0 // 最大向下滚动距离，用于计算需要增量渲染的高度
@@ -30,11 +26,11 @@ export default struct TextReaderView {
   }
 
   textLayout() {
-    if (!!this.bookPath) {
-      this.textParser.parseLocation(this.bookPath).then((linesLocation) => {
+    if (!!this.currBookPath) {
+      this.textParser.parseLocation(this.currBookPath).then((linesLocation) => {
         this.textLayoutManage = new TextLayoutManage({
           uiContext: this.uiContext,
-          filePath: this.bookPath!,
+          filePath: this.currBookPath!,
           startLineIndex: this.startLineIndex,
           preRenderPage: 2,
           pageHeight: this.screenH,
