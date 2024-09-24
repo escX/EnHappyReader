@@ -17,9 +17,9 @@ export default struct TextReaderView {
   private screenW: number = px2vp(this.displaySize.width)
   private screenH: number = px2vp(this.displaySize.height)
   private startLineIndex: number = 0 // 首页首行在文件中的索引
-  private maxUpDistance: number = 0 // 最大向上滚动距离
-  private maxDownDistance: number = 0 // 最大向下滚动距离
-  private scrollOffsetY: number = 0 // 相对初始位置的滚动距离
+  private maxUpDistance: number = 0 // 最大向上滚动距离，用于计算需要增量渲染的高度
+  private maxDownDistance: number = 0 // 最大向下滚动距离，用于计算需要增量渲染的高度
+  private scrollOffsetY: number = 0 // 相对初始位置的滚动距离，用于计算需要增量渲染的高度
 
   aboutToAppear() {
     this.textLayout()

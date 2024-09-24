@@ -34,10 +34,10 @@ class TextLayoutManage {
   private pageHeight: number
   private linesLocation: Array<TextLineLocation>
   private textStyle: TextStyle
-  private prevNodeRecord: Record<string, NodeRecord> = {} // 记录向上翻页时渲染的 Span 数据
-  private nextNodeRecord: Record<string, NodeRecord> = {} // 记录向下翻页时渲染的 Span 数据
-  private prevLines: Array<SpanNode> = [] // 返回向上翻页时增量 Span 数据
-  private nextLines: Array<SpanNode> = [] // 返回向下翻页时增量 Span 数据
+  private prevNodeRecord: Record<string, NodeRecord> = {} // 向上渲染的 Span 数据，包含行索引、内容和高度，用于获取行高度和总高度
+  private nextNodeRecord: Record<string, NodeRecord> = {} // 向下渲染的 Span 数据，包含行索引、内容和高度，用于获取行高度和总高度
+  private prevLines: Array<SpanNode> = [] // 向上翻页时增量 Span 数据，包含内容和行索引，用于增量渲染
+  private nextLines: Array<SpanNode> = [] // 向下翻页时增量 Span 数据，包含内容和行索引，用于增量渲染
 
   constructor(params: TextLayoutParams) {
     this.uiContext = params.uiContext

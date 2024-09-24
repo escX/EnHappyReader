@@ -37,11 +37,11 @@ function TextBuilder(params: Array<SpanNode>) {
   }
   .width('100%')
   .padding({left: Constants.SCREEN_MARGIN_X, right: Constants.SCREEN_MARGIN_X})
-  .copyOption(CopyOptions.InApp)
   .fontSize(Constants.DEFAULT_FONT_SIZE)
   .lineHeight(Constants.DEFAULT_LINE_HEIGHT_RATIO * Constants.DEFAULT_FONT_SIZE)
   .fontWeight(Constants.DEFAULT_FONT_WEIGHT)
   .fontFamily(Constants.DEFAULT_FONT_FAMILY)
+  .copyOption(CopyOptions.InApp)
   .editMenuOptions( {
     onCreateMenu: (menuItems: Array<TextMenuItem>) => {
       return [
