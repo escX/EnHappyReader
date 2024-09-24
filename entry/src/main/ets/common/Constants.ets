@@ -21,15 +21,13 @@ export default class Constants {
   // 可选背景色标题
   static readonly BG_COLOR_TITLE_ARRAY = ['精白','赭黄', '竹青', '碧蓝']
   // 屏幕的左右空白边距
-  static readonly SCREEN_MARGIN_X = 20
-  // 屏幕的上下空白边距
-  static readonly SCREEN_MARGIN_Y = 20
+  static readonly SCREEN_MARGIN_X = 16
   // 默认背景色索引
   static readonly DEFAULT_BGCOLOR_INDEX = BGColorType.YELLOW
   // 默认字号
   static readonly DEFAULT_FONT_SIZE = 18
   // 默认行高
-  static readonly DEFAULT_LINE_HEIGHT_RATIO = 1.5
+  static readonly DEFAULT_LINE_HEIGHT_RATIO = 1.6
   // 默认字体
   static readonly DEFAULT_FONT_FAMILY = 'HarmonyOS Sans'
   // 默认字重

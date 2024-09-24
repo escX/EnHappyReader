@@ -27,20 +27,6 @@ class StatusBar {
     })
   }
 
-  getStatusHeight(context: Context): Promise<number> {
-    return this.getMainWindow(context).then((mainWindow) => {
-      const statusBar: window.AvoidArea = mainWindow.getWindowAvoidArea(window.AvoidAreaType.TYPE_SYSTEM)
-      return px2vp(statusBar.topRect.height)
-    })
-  }
-
-  getNaviHeight(context: Context): Promise<number> {
-    return this.getMainWindow(context).then((mainWindow) => {
-      const naviBar: window.AvoidArea = mainWindow.getWindowAvoidArea(window.AvoidAreaType.TYPE_NAVIGATION_INDICATOR)
-      return px2vp(naviBar.bottomRect.height)
-    })
-  }
-
   show(context: Context): void {
     this.displayStatusBar(context, true)
   }

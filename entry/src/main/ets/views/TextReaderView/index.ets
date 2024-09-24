@@ -4,18 +4,22 @@ import TextNodeController from './TextNodeController'
 import TextLayoutManage from './TextLayoutManage'
 import { BusinessError } from '@kit.BasicServicesKit'
 import { display } from '@kit.ArkUI'
+import StatusBar from '../../common/StatusBar'
 
 @Component
 export default struct TextReaderView {
   @Require @Prop bookPath: string | undefined
+  @LocalStorageProp('statusBarHeight') statusBarHeight: number = 0
+  @LocalStorageProp('naviBarHeight') naviBarHeight: number = 0
+  @LocalStorageProp('screenW') screenW: number = 0
+  @LocalStorageProp('screenH') screenH: number = 0
   private uiContext: UIContext = this.getUIContext()
+  private context: Context = getContext()
   private textNodeController: TextNodeController = new TextNodeController()
   private textParser: TextParser = new TextParser()
   private textLayoutManage: TextLayoutManage | null = null
   private scroller: Scroller = new Scroller()
-  private displaySize: display.Display = display.getDefaultDisplaySync()
-  private screenW: number = px2vp(this.displaySize.width)
-  private screenH: number = px2vp(this.displaySize.height)
+  private statusBar: StatusBar = new StatusBar()
   private startLineIndex: number = 0 // 首页首行在文件中的索引
   private maxUpDistance: number = 0 // 最大向上滚动距离，用于计算需要增量渲染的高度
   private maxDownDistance: number = 0 // 最大向下滚动距离，用于计算需要增量渲染的高度
@@ -43,8 +47,10 @@ export default struct TextReaderView {
             fontFamily: Constants.DEFAULT_FONT_FAMILY,
           }
         })
+
+        this.textNodeController.setMargin(this.statusBarHeight, this.naviBarHeight)
         this.renderNextLines(0).then(() => {
-          this.renderPrevLines(0) // 必须保证 Prev 最后渲染，否则 scrollBy 可能会被 Next 的渲染覆盖不生效
+          this.renderPrevLines(0) // 必须保证 PrevLines 最后渲染，否则 scrollBy 可能会被 NextLines 的渲染覆盖不生效
         })
       })
     }

@@ -23,7 +23,7 @@ struct Reader {
 
   build() {
     Column(){
-      TextReaderView({bookPath: this.bookPath})
+      TextReaderView({bookPath: this.bookPath}, myLocalStorage)
     }
     .width('100%')
     .height('100%')

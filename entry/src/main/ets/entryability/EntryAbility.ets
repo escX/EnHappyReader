@@ -1,12 +1,21 @@
 import { AbilityConstant, UIAbility, Want } from '@kit.AbilityKit';
 import { hilog } from '@kit.PerformanceAnalysisKit';
-import { window } from '@kit.ArkUI';
+import { display, window } from '@kit.ArkUI';
+import { BusinessError } from '@kit.BasicServicesKit'
 
 interface ILocalStorage {
+  screenW: number
+  screenH: number
+  statusBarHeight: number
+  naviBarHeight: number
   currBookPath: string | undefined
 }
 
 const myLocalStorage: ILocalStorage = {
+  screenW: 0,
+  screenH: 0,
+  statusBarHeight: 0,
+  naviBarHeight: 0,
   currBookPath: undefined
 }
 
@@ -23,13 +32,32 @@ export default class EntryAbility extends UIAbility {
     // Main window is created, set main page for this ability
     hilog.info(0x0000, 'testTag', '%{public}s', 'Ability onWindowStageCreate');
 
-    windowStage.loadContent('pages/Index', new LocalStorage(myLocalStorage), (err) => {
-      if (err.code) {
-        hilog.error(0x0000, 'testTag', 'Failed to load the content. Cause: %{public}s', JSON.stringify(err) ?? '');
-        return;
-      }
-      hilog.info(0x0000, 'testTag', 'Succeeded in loading the content.');
-    });
+    windowStage.getMainWindow()
+      .then((mainWindow) => {
+        const displaySize: display.Display = display.getDefaultDisplaySync()
+        const statusBar: window.AvoidArea = mainWindow.getWindowAvoidArea(window.AvoidAreaType.TYPE_SYSTEM)
+        const naviBar: window.AvoidArea = mainWindow.getWindowAvoidArea(window.AvoidAreaType.TYPE_NAVIGATION_INDICATOR)
+
+        const myLocalStorage: ILocalStorage = {
+          screenW: displaySize.width,
+          screenH: displaySize.height,
+          statusBarHeight: px2vp(statusBar.topRect.height),
+          naviBarHeight: px2vp(naviBar.bottomRect.height),
+          currBookPath: undefined
+        }
+
+        return Promise.resolve(myLocalStorage)
+      })
+      .then((localStorage) => {
+        return windowStage.loadContent('pages/Index', new LocalStorage(localStorage))
+      })
+      .catch((err: BusinessError) => {
+        if (err.code) {
+          hilog.error(0x0000, 'testTag', 'Failed to load the content. Cause: %{public}s', JSON.stringify(err) ?? '');
+          return;
+        }
+        hilog.info(0x0000, 'testTag', 'Succeeded in loading the content.');
+      })
   }
 
   onWindowStageDestroy(): void {

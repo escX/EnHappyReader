@@ -6,13 +6,36 @@ interface SpanNode {
   index: number
 }
 
+interface VerticalMargin {
+  top: number
+  bottom: number
+}
+
+interface BuildParams {
+  nodes: Array<SpanNode>
+  margin: VerticalMargin
+}
+
 class TextNodeController extends NodeController {
   private textArray: Array<SpanNode> = []
+  private topMargin: number = 0
+  private bottomMargin: number = 0
 
   makeNode(uiContext: UIContext): FrameNode | null {
-    const textNode = new BuilderNode<[Array<SpanNode>]>(uiContext)
-    textNode.build(wrapBuilder<[Array<SpanNode>]>(TextBuilder), this.textArray)
+    const textNode = new BuilderNode<[BuildParams]>(uiContext)
+    textNode.build(wrapBuilder(TextBuilder), {
+      nodes: this.textArray,
+      margin: {
+        top: this.topMargin,
+        bottom: this.bottomMargin
+      }
+    })
     return textNode.getFrameNode()
+  }
+
+  setMargin(top: number, bottom: number) {
+    this.topMargin = top
+    this.bottomMargin = bottom
   }
 
   append(lineArray: Array<SpanNode>) {
@@ -27,16 +50,17 @@ class TextNodeController extends NodeController {
 }
 
 @Builder
-function TextBuilder(params: Array<SpanNode>) {
+function TextBuilder(params: BuildParams) {
   Text(){
     ForEach(
-      params,
+      params.nodes,
       (obj: SpanNode) => Span(obj.content),
       (obj: SpanNode) => obj.index.toString()
     )
   }
   .width('100%')
   .padding({left: Constants.SCREEN_MARGIN_X, right: Constants.SCREEN_MARGIN_X})
+  .margin(params.margin)
   .fontSize(Constants.DEFAULT_FONT_SIZE)
   .lineHeight(Constants.DEFAULT_LINE_HEIGHT_RATIO * Constants.DEFAULT_FONT_SIZE)
   .fontWeight(Constants.DEFAULT_FONT_WEIGHT)
