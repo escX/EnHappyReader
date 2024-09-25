@@ -27,13 +27,32 @@ struct Reader {
     .width('100%')
     .height('100%')
     .backgroundColor(Constants.BG_COLOR_ARRAY[Constants.DEFAULT_BGCOLOR_INDEX])
-    .gesture(
+    .parallelGesture(
       // todo: 自定义菜单：操作按钮，页面信息，配置
       // todo: 状态栏和自定义菜单的动画
-      TapGesture({ count: 1 })
-        .onAction(() => {
+      GestureGroup(GestureMode.Exclusive,
+        LongPressGesture().onAction(() => {
+          this.statusBar.hide(this.context)
+        }),
+        PanGesture().onActionStart(() => {
+          this.statusBar.hide(this.context)
+        }),
+        PinchGesture().onActionStart(() => {
+          this.statusBar.hide(this.context)
+        }),
+        RotationGesture().onActionStart(() => {
+          this.statusBar.hide(this.context)
+        }),
+        SwipeGesture().onAction(() => {
+          this.statusBar.hide(this.context)
+        }),
+        TapGesture({ count: 2 }).onAction(() => {
           this.statusBar.isShow ? this.statusBar.hide(this.context) : this.statusBar.show(this.context)
-        })
+        }),
+        TapGesture({ count: 1 }).onAction(() => {
+          this.statusBar.hide(this.context)
+        }),
+      )
     )
   }
 }

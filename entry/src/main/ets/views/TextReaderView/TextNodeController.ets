@@ -49,6 +49,7 @@ class TextNodeController extends NodeController {
   }
 }
 
+// todo: 双击会选中文本的问题，在真机上验证是否存在这个问题
 @Builder
 function TextBuilder(params: BuildParams) {
   Text(){
