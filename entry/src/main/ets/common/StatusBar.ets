@@ -2,7 +2,6 @@ import { window } from '@kit.ArkUI'
 
 class StatusBar {
   private mainWindow: window.Window | null = null
-  private initSystemBarProps: window.SystemBarProperties | null = null
   public isShow: boolean = true
 
   private getMainWindow(context: Context): Promise<window.Window> {
@@ -12,7 +11,6 @@ class StatusBar {
       } else {
         window.getLastWindow(context).then((mainWindow) => {
           this.mainWindow = mainWindow
-          this.initSystemBarProps = mainWindow.getWindowSystemBarProperties()
           resolve(mainWindow)
         }).catch(() => {
           reject()
@@ -27,28 +25,28 @@ class StatusBar {
     })
   }
 
-  show(context: Context): void {
-    this.displayStatusBar(context, true)
+  show(context: Context, useSystemBar: boolean = false): void {
+    this.displayStatusBar(context, true, useSystemBar)
   }
 
   hide(context: Context): void {
     this.displayStatusBar(context, false)
   }
 
-  private displayStatusBar(context: Context, show: boolean): void {
+  private displayStatusBar(context: Context, show: boolean, useDefaultBar: boolean = false): void {
     this.getMainWindow(context).then((mainWindow) => {
       this.isShow = show
-      const statusBarColor = this.initSystemBarProps?.statusBarColor ?? '#FFFFFFFF'
-      const navigationBarColor = this.initSystemBarProps?.navigationBarColor ?? '#FFFFFFFF'
-      const statusBarContentColor = this.initSystemBarProps?.statusBarContentColor ?? '#FF000000'
-      const navigationBarContentColor = this.initSystemBarProps?.navigationBarContentColor ?? '#FF000000'
+      const statusBarColor = useDefaultBar ? '#66000000' : '#FFFFFFFF'
+      const navigationBarColor = useDefaultBar ? '#66000000' : '#FFFFFFFF'
+      const statusBarContentColor = useDefaultBar ? '#E5FFFFFF' : '#FF000000'
+      const navigationBarContentColor = useDefaultBar ? '#E5FFFFFF' : '#FF000000'
 
       // 设置透明
       mainWindow.setWindowSystemBarProperties({
-        statusBarColor: show ? statusBarColor : '#00000000', // 状态栏背景色，默认 #66000000
-        navigationBarColor: show ? navigationBarColor : '#00000000', // 导航栏背景色，默认 #66000000
-        statusBarContentColor: show ? statusBarContentColor : '#00FFFFFF', // 状态栏文字颜色，默认 #E5FFFFFF
-        navigationBarContentColor: show ? navigationBarContentColor : '#00FFFFFF' // 导航栏文字颜色，默认 #E5FFFFFF
+        statusBarColor: show ? statusBarColor : '#00000000',
+        navigationBarColor: show ? navigationBarColor : '#00000000',
+        statusBarContentColor: show ? statusBarContentColor : '#00FFFFFF',
+        navigationBarContentColor: show ? navigationBarContentColor : '#00FFFFFF'
       })
 
       // 会使状态栏和导航栏隐藏

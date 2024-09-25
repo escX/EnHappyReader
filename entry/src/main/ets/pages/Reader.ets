@@ -11,8 +11,11 @@ struct Reader {
   private statusBar: StatusBar = new StatusBar()
 
   aboutToAppear() {
-    // 设置全屏布局，隐藏状态栏
+    // 设置全屏布局
     this.statusBar.setFullScreen(this.context)
+  }
+
+  onPageShow(): void {
     this.statusBar.hide(this.context)
   }
 
