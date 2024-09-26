@@ -30,6 +30,4 @@ export default class Constants {
   static readonly DEFAULT_LINE_HEIGHT_RATIO = 1.6
   // 默认字体
   static readonly DEFAULT_FONT_FAMILY = 'HarmonyOS Sans'
-  // 默认字重
-  static readonly DEFAULT_FONT_WEIGHT = FontWeight.Normal
 }

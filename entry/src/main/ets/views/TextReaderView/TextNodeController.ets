@@ -64,7 +64,6 @@ function TextBuilder(params: BuildParams) {
   .margin(params.margin)
   .fontSize(Constants.DEFAULT_FONT_SIZE)
   .lineHeight(Constants.DEFAULT_LINE_HEIGHT_RATIO * Constants.DEFAULT_FONT_SIZE)
-  .fontWeight(Constants.DEFAULT_FONT_WEIGHT)
   .fontFamily(Constants.DEFAULT_FONT_FAMILY)
   .copyOption(CopyOptions.InApp)
   .editMenuOptions( {
