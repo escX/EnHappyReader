@@ -3,18 +3,10 @@ import ShelfTab from '../views/ShelfTab/index'
 import StarTab from '../views/StarTab/index'
 import SummaryTab from '../views/SummaryTab/index'
 import { SymbolGlyphModifier } from '@kit.ArkUI'
-import { systemBar } from '../common/SystemBar'
 
 @Entry(LocalStorage.getShared())
 @Component
 struct Index {
-  @LocalStorageProp('statusBarHeight') statusBarHeight: number = 0
-  @LocalStorageProp('naviBarHeight') naviBarHeight: number = 0
-
-  aboutToAppear() {
-    systemBar.setFullScreen()
-  }
-
   build() {
     Column(){
       Tabs() {
@@ -46,7 +38,6 @@ struct Index {
           normal: new SymbolGlyphModifier($r('sys.symbol.heart_square_stack'))
         }, '收藏'))
       }
-      .margin({top: this.statusBarHeight, bottom: this.naviBarHeight})
       .divider({strokeWidth: 0.5})
       .barPosition(BarPosition.End)
       .animationMode(AnimationMode.NO_ANIMATION)

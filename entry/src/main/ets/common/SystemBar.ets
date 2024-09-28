@@ -2,38 +2,26 @@ import { window } from '@kit.ArkUI'
 
 class SystemBar {
   private mainWindow: window.Window | null = null
-  public isShow: boolean = true
+  private isShow: boolean = true
 
   setMainWindow(mainWindow: window.Window) {
     this.mainWindow = mainWindow
   }
 
-  setFullScreen(): Promise<void> {
+  setFullScreen(full: boolean): Promise<void> {
     if (this.mainWindow) {
-      return this.mainWindow.setWindowLayoutFullScreen(true)
+      return this.mainWindow.setWindowLayoutFullScreen(full)
     }
 
     return Promise.reject()
   }
 
-  show(): void {
-    this.displayStatusBar(true)
+  enableNaviBar(enable: boolean): void {
+    this.mainWindow?.setSpecificSystemBarEnabled('navigationIndicator', enable)
   }
 
-  hide(): void {
-    this.displayStatusBar(false)
-  }
-
-  showNaviBar() {
-    this.mainWindow?.setSpecificSystemBarEnabled('navigationIndicator', true)
-  }
-
-  hideNaviBar() {
-    this.mainWindow?.setSpecificSystemBarEnabled('navigationIndicator', false)
-  }
-
-  private displayStatusBar(show: boolean): void {
-    if (this.mainWindow) {
+  displayStatusBar(show: boolean): void {
+    if (this.mainWindow && show !== this.isShow) {
       this.isShow = show
 
       // 设置透明

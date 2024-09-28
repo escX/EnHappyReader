@@ -16,44 +16,29 @@ struct Reader {
       topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0
     },
     cancel: () => {
-      this.hideBar()
+      systemBar.displayStatusBar(false)
       this.closeBottomBar()
     }
   })
 
-  aboutToAppear() {
-    // 设置全屏布局
-    systemBar.setFullScreen()
-  }
-
   onPageShow(): void {
-    this.hideBar()
+    systemBar.setFullScreen(true)
+    systemBar.displayStatusBar(false)
   }
 
   onPageHide() {
-    this.showBar()
+    systemBar.setFullScreen(false)
+    systemBar.displayStatusBar(true)
     this.closeBottomBar()
   }
 
-  showBar() {
-    if (!systemBar.isShow) {
-      systemBar.show()
-    }
-  }
-
-  hideBar() {
-    if (systemBar.isShow) {
-      systemBar.hide()
-    }
-  }
-
   openBottomBar() {
-    systemBar.hideNaviBar()
+    systemBar.enableNaviBar(false)
     this.bottomBarController.open()
   }
 
   closeBottomBar() {
-    systemBar.showNaviBar()
+    systemBar.enableNaviBar(true)
     this.bottomBarController.close()
   }
 
@@ -66,32 +51,31 @@ struct Reader {
     .backgroundColor(Constants.BG_COLOR_ARRAY[Constants.DEFAULT_BGCOLOR_INDEX])
     .parallelGesture(
       // todo: 自定义菜单：操作按钮，页面信息，配置
-      // todo: 状态栏和自定义菜单的动画
       GestureGroup(GestureMode.Exclusive,
         PinchGesture().onActionStart(() => {
-          this.showBar()
+          systemBar.displayStatusBar(true)
           this.openBottomBar()
         }),
         LongPressGesture().onAction(() => {
-          this.hideBar()
+          systemBar.displayStatusBar(false)
           this.closeBottomBar()
         }),
         PanGesture().onActionStart(() => {
-          this.hideBar()
+          systemBar.displayStatusBar(false)
           this.closeBottomBar()
         }),
         RotationGesture().onActionStart(() => {
-          this.hideBar()
+          systemBar.displayStatusBar(false)
           this.closeBottomBar()
         }),
         SwipeGesture().onAction(() => {
-          this.hideBar()
+          systemBar.displayStatusBar(false)
           this.closeBottomBar()
         }),
         TapGesture().onAction(() => {
-          this.hideBar()
+          systemBar.displayStatusBar(false)
           this.closeBottomBar()
-        }),
+        })
       )
     )
   }
