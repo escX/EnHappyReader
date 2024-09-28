@@ -49,13 +49,8 @@ class StatusBar {
         navigationBarContentColor: show ? navigationBarContentColor : '#00FFFFFF'
       })
 
-      // 会使状态栏和导航栏隐藏
-      // mainWindow.setWindowSystemBarEnable(show ? ['status', 'navigation'] : [])
-      // mainWindow.setSpecificSystemBarEnabled('status', show)
-      // mainWindow.setSpecificSystemBarEnabled('navigation', show)
-      // mainWindow.setSpecificSystemBarEnabled('navigationIndicator', show)
-      // 设置全屏布局，有一些问题，路由返回时没有生效，改为在页面中始终使用全屏布局，不再动态改变
-      // mainWindow.setWindowLayoutFullScreen(!show)
+      // 隐藏底部导航条
+      mainWindow.setSpecificSystemBarEnabled('navigationIndicator', !show)
     })
   }
 }

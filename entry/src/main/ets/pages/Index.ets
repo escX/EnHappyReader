@@ -5,9 +5,7 @@ import SummaryTab from '../views/SummaryTab/index'
 import { SymbolGlyphModifier } from '@kit.ArkUI'
 import StatusBar from '../common/StatusBar'
 
-const myLocalStorage = LocalStorage.getShared()
-
-@Entry(myLocalStorage)
+@Entry(LocalStorage.getShared())
 @Component
 struct Index {
   @LocalStorageProp('statusBarHeight') statusBarHeight: number = 0
@@ -24,7 +22,7 @@ struct Index {
       Tabs() {
         // 书架
         TabContent() {
-          ShelfTab({}, myLocalStorage)
+          ShelfTab()
         }.tabBar(BottomTabBarStyle.of({
           normal: new SymbolGlyphModifier($r('sys.symbol.bookshelf'))
         }, '书架'))

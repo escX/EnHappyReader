@@ -42,7 +42,7 @@ export default class EntryAbility extends UIAbility {
           screenW: displaySize.width,
           screenH: displaySize.height,
           statusBarHeight: px2vp(statusBar.topRect.height),
-          naviBarHeight: px2vp(naviBar.bottomRect.height + statusBar.bottomRect.height), // 导航条 + 导航栏
+          naviBarHeight: px2vp(naviBar.bottomRect.height),
           currBookPath: undefined
         }
 

@@ -1,14 +1,26 @@
 import Constants from '../common/Constants'
 import StatusBar from '../common/StatusBar'
 import TextReaderView from '../views/TextReaderView'
+import ReaderBottomBar from '../views/ReaderBottomBar'
 
-const myLocalStorage = LocalStorage.getShared()
-
-@Entry
+@Entry(LocalStorage.getShared())
 @Component
 struct Reader {
   private context = getContext()
   private statusBar: StatusBar = new StatusBar()
+  private bottomBarController: CustomDialogController = new CustomDialogController({
+    builder: ReaderBottomBar(),
+    isModal: false,
+    alignment: DialogAlignment.BottomStart,
+    width: '100%',
+    backgroundBlurStyle: BlurStyle.NONE,
+    cornerRadius: {
+      topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0
+    },
+    cancel: () => {
+      this.hideBar()
+    }
+  })
 
   aboutToAppear() {
     // 设置全屏布局
@@ -16,16 +28,30 @@ struct Reader {
   }
 
   onPageShow(): void {
-    this.statusBar.hide(this.context)
+    this.hideBar()
   }
 
   onPageHide() {
-    this.statusBar.show(this.context)
+    this.showBar()
+  }
+
+  showBar() {
+    if (!this.statusBar.isShow) {
+      this.statusBar.show(this.context)
+      this.bottomBarController.open()
+    }
+  }
+
+  hideBar() {
+    if (this.statusBar.isShow) {
+      this.statusBar.hide(this.context)
+      this.bottomBarController.close()
+    }
   }
 
   build() {
     Column(){
-      TextReaderView({}, myLocalStorage)
+      TextReaderView()
     }
     .width('100%')
     .height('100%')
@@ -34,26 +60,23 @@ struct Reader {
       // todo: 自定义菜单：操作按钮，页面信息，配置
       // todo: 状态栏和自定义菜单的动画
       GestureGroup(GestureMode.Exclusive,
+        PinchGesture().onActionStart(() => {
+          this.showBar()
+        }),
         LongPressGesture().onAction(() => {
-          this.statusBar.hide(this.context)
+          this.hideBar()
         }),
         PanGesture().onActionStart(() => {
-          this.statusBar.hide(this.context)
-        }),
-        PinchGesture().onActionStart(() => {
-          this.statusBar.hide(this.context)
+          this.hideBar()
         }),
         RotationGesture().onActionStart(() => {
-          this.statusBar.hide(this.context)
+          this.hideBar()
         }),
         SwipeGesture().onAction(() => {
-          this.statusBar.hide(this.context)
+          this.hideBar()
         }),
-        TapGesture({ count: 2 }).onAction(() => {
-          this.statusBar.isShow ? this.statusBar.hide(this.context) : this.statusBar.show(this.context)
-        }),
-        TapGesture({ count: 1 }).onAction(() => {
-          this.statusBar.hide(this.context)
+        TapGesture().onAction(() => {
+          this.hideBar()
         }),
       )
     )

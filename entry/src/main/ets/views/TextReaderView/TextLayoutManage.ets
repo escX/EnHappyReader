@@ -16,7 +16,6 @@ interface TextStyle {
   lineWidth: number
   fontSize: number
   lineHeight: number
-  fontWeight: FontWeight
   fontFamily: string
 }
 
@@ -71,7 +70,6 @@ class TextLayoutManage {
       constraintWidth: this.textStyle.lineWidth,
       fontSize: this.textStyle.fontSize,
       lineHeight: this.textStyle.lineHeight,
-      fontWeight: this.textStyle.fontWeight,
       fontFamily: this.textStyle.fontFamily
     })
     return px2vp(textSize.height as number)
