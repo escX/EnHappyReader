@@ -3,6 +3,7 @@ import { hilog } from '@kit.PerformanceAnalysisKit';
 import { display, window } from '@kit.ArkUI';
 import { BusinessError } from '@kit.BasicServicesKit'
 import { systemBar } from '../common/SystemBar';
+import { myPreference } from '../common/MyPreference';
 
 interface ILocalStorage {
   screenW: number
@@ -25,8 +26,13 @@ export default class EntryAbility extends UIAbility {
     // Main window is created, set main page for this ability
     hilog.info(0x0000, 'testTag', '%{public}s', 'Ability onWindowStageCreate');
 
+    let mainWindow: window.Window
     windowStage.getMainWindow()
-      .then((mainWindow) => {
+      .then((windowClass) => {
+        mainWindow = windowClass
+        return myPreference.init(this.context)
+      })
+      .then(() => {
         systemBar.setMainWindow(mainWindow)
 
         const displaySize: display.Display = display.getDefaultDisplaySync()

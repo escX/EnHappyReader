@@ -6,7 +6,7 @@ class SystemBar {
   private mainWindow: window.Window | null = null
   private isShow: boolean = true
 
-  setMainWindow(mainWindow: window.Window) {
+  setMainWindow(mainWindow: window.Window): void {
     this.mainWindow = mainWindow
   }
 
