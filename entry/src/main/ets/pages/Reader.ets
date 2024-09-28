@@ -19,6 +19,7 @@ struct Reader {
     },
     cancel: () => {
       this.hideBar()
+      this.bottomBarController.close()
     }
   })
 
@@ -33,19 +34,18 @@ struct Reader {
 
   onPageHide() {
     this.showBar()
+    this.bottomBarController.close()
   }
 
   showBar() {
     if (!this.statusBar.isShow) {
       this.statusBar.show(this.context)
-      this.bottomBarController.open()
     }
   }
 
   hideBar() {
     if (this.statusBar.isShow) {
       this.statusBar.hide(this.context)
-      this.bottomBarController.close()
     }
   }
 
@@ -62,21 +62,27 @@ struct Reader {
       GestureGroup(GestureMode.Exclusive,
         PinchGesture().onActionStart(() => {
           this.showBar()
+          this.bottomBarController.open()
         }),
         LongPressGesture().onAction(() => {
           this.hideBar()
+          this.bottomBarController.close()
         }),
         PanGesture().onActionStart(() => {
           this.hideBar()
+          this.bottomBarController.close()
         }),
         RotationGesture().onActionStart(() => {
           this.hideBar()
+          this.bottomBarController.close()
         }),
         SwipeGesture().onAction(() => {
           this.hideBar()
+          this.bottomBarController.close()
         }),
         TapGesture().onAction(() => {
           this.hideBar()
+          this.bottomBarController.close()
         }),
       )
     )

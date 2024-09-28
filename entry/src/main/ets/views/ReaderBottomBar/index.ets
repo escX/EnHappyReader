@@ -81,5 +81,6 @@ export default struct ReaderBottomBar {
     .width('100%')
     .backgroundColor(Color.White)
     .padding({bottom: this.naviBarHeight, top: 30})
+    .transition(TransitionEffect.OPACITY.animation({ duration: 300 }).combine(TransitionEffect.translate({ y: 300 })))
   }
 }
