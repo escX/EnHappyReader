@@ -1,13 +1,11 @@
 import Constants from '../common/Constants'
-import StatusBar from '../common/StatusBar'
+import { systemBar } from '../common/SystemBar'
 import TextReaderView from '../views/TextReaderView'
 import ReaderBottomBar from '../views/ReaderBottomBar'
 
 @Entry(LocalStorage.getShared())
 @Component
 struct Reader {
-  private context = getContext()
-  private statusBar: StatusBar = new StatusBar()
   private bottomBarController: CustomDialogController = new CustomDialogController({
     builder: ReaderBottomBar(),
     isModal: false,
@@ -19,13 +17,13 @@ struct Reader {
     },
     cancel: () => {
       this.hideBar()
-      this.bottomBarController.close()
+      this.closeBottomBar()
     }
   })
 
   aboutToAppear() {
     // 设置全屏布局
-    this.statusBar.setFullScreen(this.context)
+    systemBar.setFullScreen()
   }
 
   onPageShow(): void {
@@ -34,19 +32,29 @@ struct Reader {
 
   onPageHide() {
     this.showBar()
-    this.bottomBarController.close()
+    this.closeBottomBar()
   }
 
   showBar() {
-    if (!this.statusBar.isShow) {
-      this.statusBar.show(this.context)
+    if (!systemBar.isShow) {
+      systemBar.show()
     }
   }
 
   hideBar() {
-    if (this.statusBar.isShow) {
-      this.statusBar.hide(this.context)
+    if (systemBar.isShow) {
+      systemBar.hide()
     }
+  }
+
+  openBottomBar() {
+    systemBar.hideNaviBar()
+    this.bottomBarController.open()
+  }
+
+  closeBottomBar() {
+    systemBar.showNaviBar()
+    this.bottomBarController.close()
   }
 
   build() {
@@ -62,27 +70,27 @@ struct Reader {
       GestureGroup(GestureMode.Exclusive,
         PinchGesture().onActionStart(() => {
           this.showBar()
-          this.bottomBarController.open()
+          this.openBottomBar()
         }),
         LongPressGesture().onAction(() => {
           this.hideBar()
-          this.bottomBarController.close()
+          this.closeBottomBar()
         }),
         PanGesture().onActionStart(() => {
           this.hideBar()
-          this.bottomBarController.close()
+          this.closeBottomBar()
         }),
         RotationGesture().onActionStart(() => {
           this.hideBar()
-          this.bottomBarController.close()
+          this.closeBottomBar()
         }),
         SwipeGesture().onAction(() => {
           this.hideBar()
-          this.bottomBarController.close()
+          this.closeBottomBar()
         }),
         TapGesture().onAction(() => {
           this.hideBar()
-          this.bottomBarController.close()
+          this.closeBottomBar()
         }),
       )
     )

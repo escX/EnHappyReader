@@ -3,18 +3,16 @@ import ShelfTab from '../views/ShelfTab/index'
 import StarTab from '../views/StarTab/index'
 import SummaryTab from '../views/SummaryTab/index'
 import { SymbolGlyphModifier } from '@kit.ArkUI'
-import StatusBar from '../common/StatusBar'
+import { systemBar } from '../common/SystemBar'
 
 @Entry(LocalStorage.getShared())
 @Component
 struct Index {
   @LocalStorageProp('statusBarHeight') statusBarHeight: number = 0
   @LocalStorageProp('naviBarHeight') naviBarHeight: number = 0
-  private context = getContext()
-  private statusBar: StatusBar = new StatusBar()
 
   aboutToAppear() {
-    this.statusBar.setFullScreen(this.context)
+    systemBar.setFullScreen()
   }
 
   build() {

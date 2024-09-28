@@ -2,6 +2,7 @@ import { AbilityConstant, UIAbility, Want } from '@kit.AbilityKit';
 import { hilog } from '@kit.PerformanceAnalysisKit';
 import { display, window } from '@kit.ArkUI';
 import { BusinessError } from '@kit.BasicServicesKit'
+import { systemBar } from '../common/SystemBar';
 
 interface ILocalStorage {
   screenW: number
@@ -9,14 +10,6 @@ interface ILocalStorage {
   statusBarHeight: number
   naviBarHeight: number
   currBookPath: string | undefined
-}
-
-const myLocalStorage: ILocalStorage = {
-  screenW: 0,
-  screenH: 0,
-  statusBarHeight: 0,
-  naviBarHeight: 0,
-  currBookPath: undefined
 }
 
 export default class EntryAbility extends UIAbility {
@@ -34,6 +27,8 @@ export default class EntryAbility extends UIAbility {
 
     windowStage.getMainWindow()
       .then((mainWindow) => {
+        systemBar.setMainWindow(mainWindow)
+
         const displaySize: display.Display = display.getDefaultDisplaySync()
         const statusBar: window.AvoidArea = mainWindow.getWindowAvoidArea(window.AvoidAreaType.TYPE_SYSTEM)
         const naviBar: window.AvoidArea = mainWindow.getWindowAvoidArea(window.AvoidAreaType.TYPE_NAVIGATION_INDICATOR)
