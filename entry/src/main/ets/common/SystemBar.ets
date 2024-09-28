@@ -1,5 +1,7 @@
 import { window } from '@kit.ArkUI'
 
+type PresetBackground = 'white' | 'transparent'
+
 class SystemBar {
   private mainWindow: window.Window | null = null
   private isShow: boolean = true
@@ -20,16 +22,22 @@ class SystemBar {
     this.mainWindow?.setSpecificSystemBarEnabled('navigationIndicator', enable)
   }
 
-  displayStatusBar(show: boolean): void {
+  displayStatusBar(show: boolean, preset: PresetBackground = 'transparent'): void {
     if (this.mainWindow && show !== this.isShow) {
       this.isShow = show
 
-      // 设置透明
+      let barColor = '#00FFFFFF'
+      let contentColor = '#FF000000'
+      if (preset === 'white') {
+        barColor = '#FFFFFFFF'
+        contentColor = '#FF000000'
+      }
+
       this.mainWindow.setWindowSystemBarProperties({
-        statusBarColor: show ? '#FFFFFFFF' : '#00000000', // '#66000000'
-        navigationBarColor: show ? '#FFFFFFFF' : '#00000000', // '#66000000'
-        statusBarContentColor: show ? '#FF000000' : '#00FFFFFF', // '#E5FFFFFF'
-        navigationBarContentColor: show ? '#FF000000' : '#00FFFFFF' // '#E5FFFFFF'
+        statusBarColor: show ? barColor : '#00000000',
+        navigationBarColor: show ? barColor : '#00000000',
+        statusBarContentColor: show ? contentColor : '#00FFFFFF',
+        navigationBarContentColor: show ? contentColor : '#00FFFFFF'
       })
     }
   }

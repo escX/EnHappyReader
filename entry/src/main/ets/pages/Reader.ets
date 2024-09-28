@@ -28,7 +28,7 @@ struct Reader {
 
   onPageHide() {
     systemBar.setFullScreen(false)
-    systemBar.displayStatusBar(true)
+    systemBar.displayStatusBar(true, 'transparent')
     this.closeBottomBar()
   }
 
@@ -53,7 +53,7 @@ struct Reader {
       // todo: 自定义菜单：操作按钮，页面信息，配置
       GestureGroup(GestureMode.Exclusive,
         PinchGesture().onActionStart(() => {
-          systemBar.displayStatusBar(true)
+          systemBar.displayStatusBar(true, 'white')
           this.openBottomBar()
         }),
         LongPressGesture().onAction(() => {
