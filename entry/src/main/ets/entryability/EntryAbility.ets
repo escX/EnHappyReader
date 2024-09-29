@@ -40,8 +40,8 @@ export default class EntryAbility extends UIAbility {
         const naviBar: window.AvoidArea = mainWindow.getWindowAvoidArea(window.AvoidAreaType.TYPE_NAVIGATION_INDICATOR)
 
         const myLocalStorage: ILocalStorage = {
-          screenW: displaySize.width,
-          screenH: displaySize.height,
+          screenW: px2vp(displaySize.width),
+          screenH: px2vp(displaySize.height),
           statusBarHeight: px2vp(statusBar.topRect.height),
           naviBarHeight: px2vp(naviBar.bottomRect.height),
           currBookPath: undefined

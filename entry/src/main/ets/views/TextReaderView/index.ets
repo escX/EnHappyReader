@@ -19,7 +19,7 @@ export default struct TextReaderView {
   private startLineIndex: number = 0 // 首页首行在文件中的索引
   private maxUpDistance: number = 0 // 最大向上滚动距离，用于计算需要增量渲染的高度
   private maxDownDistance: number = 0 // 最大向下滚动距离，用于计算需要增量渲染的高度
-  private scrollOffsetY: number = 0 // 相对初始位置的滚动距离，用于计算需要增量渲染的高度
+  private totalOffset: number = 0 // 相对初始位置的滚动距离，用于计算需要增量渲染的高度
 
   aboutToAppear() {
     this.textLayout()
@@ -44,23 +44,29 @@ export default struct TextReaderView {
         })
 
         this.textNodeController.setMargin(this.statusBarHeight, this.naviBarHeight)
-        this.renderNextLines(0).then(() => {
-          this.renderPrevLines(0) // 必须保证 PrevLines 最后渲染，否则 scrollBy 可能会被 NextLines 的渲染覆盖不生效
-        })
+        this.renderNextLines(0)
+          .then(() => {
+            return this.renderPrevLines(0) // 必须保证 PrevLines 最后渲染，否则 scrollBy 可能不会作用
+          })
+          .then((prependHeight) => {
+            this.scroller.scrollBy(0, prependHeight + this.statusBarHeight)
+          })
       })
     }
   }
 
-  // 渲染下方的增量 Span
-  renderNextLines(downDistance: number): Promise<void> {
+  // 渲染下方的增量 Span，返回渲染的高度
+  renderNextLines(downDistance: number): Promise<number> {
     return new Promise((resolve, reject) => {
       this.textLayoutManage?.getNextLines(downDistance)
         .then((data) => {
+          let appendHeight = 0
           if (data.length > 0) {
             this.textNodeController.append(data)
             this.maxDownDistance = downDistance
+            appendHeight = this.textLayoutManage?.getIncrementNextHeight() ?? 0
           }
-          resolve()
+          resolve(appendHeight)
         })
         .catch((err: BusinessError) => {
           reject(err)
@@ -68,17 +74,18 @@ export default struct TextReaderView {
     })
   }
 
-  // 渲染上方的增量 Span
-  renderPrevLines(upDistance: number): Promise<void> {
+  // 渲染上方的增量 Span，返回渲染的高度
+  renderPrevLines(upDistance: number): Promise<number> {
     return new Promise((resolve, reject) => {
       this.textLayoutManage?.getPrevLines(upDistance)
         .then((data) => {
+          let prependHeight = 0
           if (data.length > 0) {
             this.textNodeController.prepend(data)
             this.maxUpDistance = upDistance
-            this.scroller.scrollBy(0, this.textLayoutManage?.getIncrementPrevHeight()) // 滚动容器内容上方增加了高度，需要 ScrollBy 向下滑动这个距离
+            prependHeight = this.textLayoutManage?.getIncrementPrevHeight() ?? 0
           }
-          resolve()
+          resolve(prependHeight)
         })
         .catch((err: BusinessError) => {
           reject(err)
@@ -88,12 +95,12 @@ export default struct TextReaderView {
 
   // 进行计算增量渲染的条件：当前滚动距离，超出之前最大滚动距离，半个以上屏幕
   needLayoutPrev() {
-    return -this.scrollOffsetY - this.maxUpDistance > this.screenH / 2
+    return -this.totalOffset - this.maxUpDistance > this.screenH / 2
   }
 
   // 进行计算增量渲染的条件：当前滚动距离，超出之前最大滚动距离，半个以上屏幕
   needLayoutNext() {
-    return this.scrollOffsetY - this.maxDownDistance > this.screenH / 2
+    return this.totalOffset - this.maxDownDistance > this.screenH / 2
   }
 
   build() {
@@ -109,18 +116,20 @@ export default struct TextReaderView {
     .friction(1) // 弹性滚动摩擦系数
     .onWillScroll((xOffset: number, yOffset: number, scrollState: ScrollState, scrollSource: ScrollSource) => {
       if (scrollState === ScrollState.Idle && scrollSource === ScrollSource.SCROLLER) {
-        this.scrollOffsetY -= yOffset // 减去 scrollBy 的距离
+        this.totalOffset -= yOffset // 减去 scrollBy 的距离
       }
     })
     .onDidScroll((xOffset: number, yOffset: number) => {
-      this.scrollOffsetY += yOffset
+      this.totalOffset += yOffset
     })
     .onScrollStop(() => {
-      if (this.scrollOffsetY > 0 && this.needLayoutNext()) {
-        this.renderNextLines(this.scrollOffsetY)
+      if (this.totalOffset > 0 && this.needLayoutNext()) {
+        this.renderNextLines(this.totalOffset)
       }
-      if (this.scrollOffsetY < 0 && this.needLayoutPrev()) {
-        this.renderPrevLines(-this.scrollOffsetY)
+      if (this.totalOffset < 0 && this.needLayoutPrev()) {
+        this.renderPrevLines(-this.totalOffset).then((prependHeight) => {
+          this.scroller.scrollBy(0, prependHeight) // 滚动容器内容上方增加了高度，需要 ScrollBy 向下滑动这个距离
+        })
       }
     })
   }
