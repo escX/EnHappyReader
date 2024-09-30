@@ -17,6 +17,7 @@ export default struct TextReaderView {
   private textLayoutManage: TextLayoutManage | null = null
   private scroller: Scroller = new Scroller()
   private startLineIndex: number = 0 // 首页首行在文件中的索引
+  private startOffset: number = 0 // 相对于初始行 startLine 顶部的距离，用于定位初始滚动条位置
   private maxUpDistance: number = 0 // 最大向上滚动距离，用于计算需要增量渲染的高度
   private maxDownDistance: number = 0 // 最大向下滚动距离，用于计算需要增量渲染的高度
   private totalOffset: number = 0 // 相对初始位置的滚动距离，用于计算需要增量渲染的高度
@@ -44,12 +45,13 @@ export default struct TextReaderView {
         })
 
         this.textNodeController.setMargin(this.statusBarHeight, this.naviBarHeight)
-        this.renderNextLines(0)
+        this.renderNextLines(this.startOffset)
           .then(() => {
             return this.renderPrevLines(0) // 必须保证 PrevLines 最后渲染，否则 scrollBy 可能不会作用
           })
           .then((prependHeight) => {
-            this.scroller.scrollBy(0, prependHeight + this.statusBarHeight)
+            let scrollByHeight = prependHeight + this.startOffset + this.statusBarHeight
+            this.scroller.scrollBy(0, scrollByHeight)
           })
       })
     }
