@@ -2,6 +2,7 @@ import Constants from '../common/Constants'
 import { systemBar } from '../common/SystemBar'
 import TextReaderView from '../views/TextReaderView'
 import ReaderBottomBar from '../views/ReaderBottomBar'
+import { font } from '@kit.ArkUI'
 
 @Entry(LocalStorage.getShared())
 @Component
@@ -21,7 +22,14 @@ struct Reader {
     }
   })
 
-  onPageShow(): void {
+  aboutToAppear() {
+    font.registerFont({
+      familyName: 'Rainbow',
+      familySrc: $rawfile('font/Rainbow.ttf')
+    })
+  }
+
+  onPageShow() {
     systemBar.setFullScreen(true)
     systemBar.displayStatusBar(false)
   }

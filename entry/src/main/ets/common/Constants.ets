@@ -29,5 +29,5 @@ export default class Constants {
   // 默认行高
   static readonly DEFAULT_LINE_HEIGHT_RATIO = 1.6
   // 默认字体
-  static readonly DEFAULT_FONT_FAMILY = 'HarmonyOS Sans'
+  static readonly DEFAULT_FONT_FAMILY = 'Rainbow'
 }
