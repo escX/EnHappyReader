@@ -25,6 +25,11 @@ interface NodeRecord {
   height: number
 }
 
+interface LinePosition {
+  index: number
+  offset: number
+}
+
 class TextLayoutManage {
   private uiContext: UIContext
   private filePath: string
@@ -33,8 +38,8 @@ class TextLayoutManage {
   private pageHeight: number
   private linesLocation: Array<TextLineLocation>
   private textStyle: TextStyle
-  private prevNodeRecord: Record<string, NodeRecord> = {} // 向上渲染的 Span 数据，包含行索引、内容和高度，用于获取行高度和总高度
-  private nextNodeRecord: Record<string, NodeRecord> = {} // 向下渲染的 Span 数据，包含行索引、内容和高度，用于获取行高度和总高度
+  private prevNodeRecord: Record<string, NodeRecord> = {} // 向上渲染的 Span 数据，包含行索引、内容和高度，用于获取已渲染部分的行高度和总高度
+  private nextNodeRecord: Record<string, NodeRecord> = {} // 向下渲染的 Span 数据，包含行索引、内容和高度，用于获取已渲染部分的行高度和总高度
   private prevLines: Array<SpanNode> = [] // 向上翻页时增量 Span 数据，包含内容和行索引，用于增量渲染
   private nextLines: Array<SpanNode> = [] // 向下翻页时增量 Span 数据，包含内容和行索引，用于增量渲染
 
@@ -246,6 +251,50 @@ class TextLayoutManage {
     ]
     return recordArray.sort((a, b) => a.index - b.index).map(item => item.text).join('')
   }
+
+  /**
+   * 获取第 index 行顶部向下一段距离后的 index 和 offset
+   * @param startIndex 基准行索引
+   * @param height 距离基准行顶部的高度
+   * @returns 当前定位行的 index 和 offset
+   */
+  getDownPositionAwayIndex(startIndex: number, height: number): LinePosition {
+    let positionIndex = startIndex < 0 ? 0 : startIndex
+    let totalHeight = this.nextNodeRecord[positionIndex.toString()]?.height ?? 0
+    while (totalHeight < height && positionIndex < this.linesLocation.length - 1) {
+      positionIndex += 1
+      totalHeight += this.nextNodeRecord[positionIndex.toString()]?.height ?? 0
+    }
+
+    const positionOffset = height - (totalHeight - this.nextNodeRecord[positionIndex.toString()]?.height ?? 0)
+    return {
+      index: positionIndex,
+      offset: positionOffset < 0 ? 0 : positionOffset
+    }
+  }
+
+  /**
+   * 获取第 index 行底部向上一段距离后的 index 和 offset
+   * @param startIndex 基准行索引
+   * @param height 距离基准行底部的高度
+   * @returns 当前定位行的 index 和 offset
+   */
+  getUpPositionAwayIndex(startIndex: number, height: number): LinePosition {
+    let positionIndex = startIndex > this.linesLocation.length - 1 ? this.linesLocation.length - 1 : startIndex
+    let totalHeight = this.prevNodeRecord[positionIndex.toString()]?.height ?? 0
+
+    while (totalHeight < height && positionIndex > 0) {
+      positionIndex -= 1
+      totalHeight += this.prevNodeRecord[positionIndex.toString()]?.height ?? 0
+    }
+
+    const positionOffset = totalHeight - height
+    return {
+      index: positionIndex,
+      offset: positionOffset < 0 ? 0 : positionOffset
+    }
+  }
 }
 
+export { LinePosition }
 export default TextLayoutManage

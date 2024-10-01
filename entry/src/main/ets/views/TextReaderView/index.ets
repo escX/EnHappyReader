@@ -1,7 +1,7 @@
 import Constants from '../../common/Constants'
 import TextParser from './TextParser'
 import TextNodeController from './TextNodeController'
-import TextLayoutManage from './TextLayoutManage'
+import TextLayoutManage, { LinePosition } from './TextLayoutManage'
 import { BusinessError } from '@kit.BasicServicesKit'
 
 @Component
@@ -50,7 +50,11 @@ export default struct TextReaderView {
             return this.renderPrevLines(0) // 必须保证 PrevLines 最后渲染，否则 scrollBy 可能不会作用
           })
           .then((prependHeight) => {
-            let scrollByHeight = prependHeight + this.startOffset + this.statusBarHeight
+            // 定位初始位置，如果不是首次进入，需要额外滚动 paddingTop 的高度
+            let scrollByHeight = prependHeight + this.startOffset
+            if (!(this.startLineIndex === 0 && this.startOffset === 0)) {
+              scrollByHeight += this.statusBarHeight
+            }
             this.scroller.scrollBy(0, scrollByHeight)
           })
       })
@@ -103,6 +107,35 @@ export default struct TextReaderView {
   // 进行计算增量渲染的条件：当前滚动距离，超出之前最大滚动距离，半个以上屏幕
   needLayoutNext() {
     return this.totalOffset - this.maxDownDistance > this.screenH / 2
+  }
+
+  // 获取当前滚动定位：当前视窗显示的第一行索引，和相对该行顶部的滚动距离
+  getViewPosition(): LinePosition {
+    if (this.startLineIndex === 0 && this.startOffset === 0 && this.totalOffset < this.statusBarHeight) {
+      return {
+        index: 0,
+        offset: 0
+      }
+    }
+
+    if (this.textLayoutManage) {
+      if (this.totalOffset > 0) {
+        let offset = this.totalOffset + this.startOffset
+        if (this.startLineIndex === 0 && this.startOffset === 0 && this.totalOffset >= this.statusBarHeight) {
+          offset -= this.statusBarHeight
+        }
+        return this.textLayoutManage.getDownPositionAwayIndex(this.startLineIndex, offset)
+      }
+
+      if (this.totalOffset < 0) {
+        return this.textLayoutManage.getUpPositionAwayIndex(this.startLineIndex - 1, -this.totalOffset - this.startOffset)
+      }
+    }
+
+    return {
+      index: this.startLineIndex,
+      offset: this.startOffset
+    }
   }
 
   build() {
