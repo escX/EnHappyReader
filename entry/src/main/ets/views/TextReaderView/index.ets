@@ -1,8 +1,13 @@
 import Constants from '../../common/Constants'
 import TextParser from './TextParser'
 import TextNodeController from './TextNodeController'
-import TextLayoutManage, { LinePosition } from './TextLayoutManage'
+import TextLayoutManage from './TextLayoutManage'
 import { BusinessError } from '@kit.BasicServicesKit'
+
+interface LinePosition {
+  index: number
+  offset: number
+}
 
 @Component
 export default struct TextReaderView {
@@ -50,12 +55,10 @@ export default struct TextReaderView {
             return this.renderPrevLines(0) // 必须保证 PrevLines 最后渲染，否则 scrollBy 可能不会作用
           })
           .then((prependHeight) => {
-            // 定位初始位置，如果不是首次进入，需要额外滚动 paddingTop 的高度
-            let scrollByHeight = prependHeight + this.startOffset
+            // 定位初始位置，如果不是首次进入，需要额外滚动 statusBarHeight 的高度
             if (!(this.startLineIndex === 0 && this.startOffset === 0)) {
-              scrollByHeight += this.statusBarHeight
+              this.scroller.scrollBy(0, prependHeight + this.statusBarHeight + this.startOffset)
             }
-            this.scroller.scrollBy(0, scrollByHeight)
           })
       })
     }
@@ -109,26 +112,34 @@ export default struct TextReaderView {
     return this.totalOffset - this.maxDownDistance > this.screenH / 2
   }
 
-  // 获取当前滚动定位：当前视窗显示的第一行索引，和相对该行顶部的滚动距离
-  getViewPosition(): LinePosition {
-    if (this.startLineIndex === 0 && this.startOffset === 0 && this.totalOffset < this.statusBarHeight) {
-      return {
-        index: 0,
-        offset: 0
-      }
-    }
-
+  // 当前视窗顶部第一行的索引，和相对该行顶部的偏移高度，用于下次打开应用的滚动定位
+  getLinePosition(): LinePosition {
     if (this.textLayoutManage) {
-      if (this.totalOffset > 0) {
-        let offset = this.totalOffset + this.startOffset
-        if (this.startLineIndex === 0 && this.startOffset === 0 && this.totalOffset >= this.statusBarHeight) {
-          offset -= this.statusBarHeight
+      const rect = this.scroller.getItemRect(0)
+      if (rect.height !== 0) {
+        const scrollOffset = -rect.y
+        if (scrollOffset < this.statusBarHeight) {
+          return {
+            index: 0,
+            offset: 0
+          }
         }
-        return this.textLayoutManage.getDownPositionAwayIndex(this.startLineIndex, offset)
-      }
+        const layoutNodes = this.textLayoutManage.getNodeRecord()
+        if (layoutNodes.length > 0) {
+          let nodeIndex = 0
+          let nodeHeight = layoutNodes[0].height + this.statusBarHeight
 
-      if (this.totalOffset < 0) {
-        return this.textLayoutManage.getUpPositionAwayIndex(this.startLineIndex - 1, -this.totalOffset - this.startOffset)
+          while (nodeHeight < scrollOffset && nodeIndex < layoutNodes.length - 1) {
+            nodeIndex += 1
+            nodeHeight += layoutNodes[nodeIndex].height
+          }
+
+          const lineOffset = scrollOffset - (nodeHeight - layoutNodes[nodeIndex].height)
+          return {
+            index: layoutNodes[nodeIndex].index,
+            offset: lineOffset < 0 ? 0 : lineOffset
+          }
+        }
       }
     }
 
