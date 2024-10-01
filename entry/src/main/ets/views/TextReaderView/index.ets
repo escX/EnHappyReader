@@ -45,7 +45,7 @@ export default struct TextReaderView {
             lineWidth: this.screenW - Constants.SCREEN_MARGIN_X * 2,
             fontSize: Constants.DEFAULT_FONT_SIZE,
             lineHeight: Constants.DEFAULT_LINE_HEIGHT_RATIO * Constants.DEFAULT_FONT_SIZE,
-            fontFamily: Constants.DEFAULT_FONT_FAMILY,
+            fontFamily: Constants.FONT_FAMILY_ARRAY[Constants.DEFAULT_FONT_FAMILY_INDEX],
           }
         })
 

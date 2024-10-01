@@ -52,6 +52,23 @@ export default struct ReaderBottomBar {
       .justifyContent(FlexAlign.SpaceBetween)
       // 第二行
       Row() {
+        Text('字体')
+          .margin({right: 10})
+        Select(Constants.FONT_FAMILY_TITLE_ARRAY.map(item => {
+          const resItem: SelectOption = {
+            value: item
+          }
+          return resItem
+        }))
+          .selected(Constants.DEFAULT_FONT_FAMILY_INDEX)
+          .value(Constants.FONT_FAMILY_TITLE_ARRAY[Constants.DEFAULT_FONT_FAMILY_INDEX])
+      }
+      .width('100%')
+      .margin({top: 20})
+      .padding({left: 20, right: 20})
+      .justifyContent(FlexAlign.Start)
+      // 第三行
+      Row() {
         Text('背景')
           .margin({right: 10})
         Grid() {
