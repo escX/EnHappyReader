@@ -12,6 +12,7 @@ export default struct TextReaderView {
   @LocalStorageProp('naviBarHeight') naviBarHeight: number = 0
   @LocalStorageProp('screenW') screenW: number = 0
   @LocalStorageProp('screenH') screenH: number = 0
+  @Prop @Watch('onPageStateChange') pageState: boolean
   private uiContext: UIContext = this.getUIContext()
   private textNodeController: TextNodeController = new TextNodeController()
   private textParser: TextParser = new TextParser()
@@ -26,13 +27,27 @@ export default struct TextReaderView {
   private totalOffset: number = 0 // 相对初始位置的滚动距离，用于计算需要增量渲染的高度
 
   aboutToAppear() {
-    this.setBookMark()
+    this.getBookMark()
     this.textLayout(this.bookMark.index, this.bookMark.offset)
     this.watchStyle()
   }
 
-  // 获取缓存书签
+  onPageStateChange() {
+    if (this.pageState === false) {
+      this.setBookMark()
+    }
+  }
+
+  // 设置缓存书签
   setBookMark() {
+    if (!!this.currBookPath) {
+      const mark = this.getLinePosition()
+      myPreference.setBookMark(this.currBookPath, mark)
+    }
+  }
+
+  // 获取缓存书签
+  getBookMark() {
     this.bookMark = myPreference.getBookMark(this.currBookPath)
   }
 
@@ -76,8 +91,8 @@ export default struct TextReaderView {
   textLayout(startLineIndex: number, startLineOffset: number) {
     if (!!this.currBookPath) {
       this.textParser.parseLocation(this.currBookPath).then((linesLocation) => {
-        this.setLayoutManage(linesLocation, 2)
-        this.buildNode(2, startLineOffset)
+        this.setLayoutManage(linesLocation, startLineIndex)
+        this.buildNode(startLineIndex, startLineOffset)
       })
     }
   }
@@ -99,7 +114,7 @@ export default struct TextReaderView {
         this.fontFamily = Constants.FONT_FAMILY_ARRAY[index]
       }
 
-      const bookMark = this.getBookMark()
+      const bookMark = this.getLinePosition()
       this.textNodeController.reset()
       this.textLayout(bookMark.index, bookMark.offset)
     })
@@ -154,7 +169,7 @@ export default struct TextReaderView {
   }
 
   // 获取当前视窗顶部第一行的索引，和相对该行顶部的偏移高度，用于保存书签
-  getBookMark(): BookMark {
+  getLinePosition(): BookMark {
     if (this.textLayoutManage) {
       const rect = this.scroller.getItemRect(0)
       if (rect.height !== 0) {
