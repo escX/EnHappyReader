@@ -1,12 +1,31 @@
 import Constants from '../../common/Constants'
+import { myPreference } from '../../common/MyPreference'
 
 @CustomDialog
 export default struct ReaderBottomBar {
   private controller?: CustomDialogController
   @LocalStorageProp('naviBarHeight') naviBarHeight: number = 0
-  @State fontSize: number = Constants.DEFAULT_FONT_SIZE
-  @State lineHeight: number = Constants.DEFAULT_LINE_HEIGHT_RATIO
-  @State bgIndex: number = Constants.DEFAULT_BGCOLOR_INDEX
+  @State fontSize: number = myPreference.getFontSize()
+  @State lineHeight: number = myPreference.getLineHeightRatio()
+  @State bgColorIndex: number = myPreference.getBgColorIndex()
+  @State fontFamilyIndex: number = myPreference.getFontFamilyIndex()
+  @State fontFamilyTitle: string = Constants.FONT_FAMILY_TITLE_ARRAY[this.fontFamilyIndex]
+
+  updateFontSize(fontSize: number) {
+    myPreference.setFontSize(fontSize)
+  }
+
+  updateLineHeight(lineHeight: number) {
+    myPreference.setLineHeightRatio(lineHeight)
+  }
+
+  updateBgColorIndex(bgColorIndex: number) {
+    myPreference.setBgColorIndex(bgColorIndex)
+  }
+
+  updateFontFamilyIndex(fontFamilyIndex: number) {
+    myPreference.setFontFamilyIndex(fontFamilyIndex)
+  }
 
   build() {
     Column() {
@@ -23,9 +42,11 @@ export default struct ReaderBottomBar {
           .enableDec(this.fontSize > 12)
           .onInc(() => {
             this.fontSize += 1
+            this.updateFontSize(this.fontSize)
           })
           .onDec(() => {
             this.fontSize -= 1
+            this.updateFontSize(this.fontSize)
           })
         }
         .flexGrow(1)
@@ -40,9 +61,11 @@ export default struct ReaderBottomBar {
           .enableDec(this.lineHeight > 1.1)
           .onInc(() => {
             this.lineHeight = (this.lineHeight * 10 + 1) / 10
+            this.updateLineHeight(this.lineHeight)
           })
           .onDec(() => {
             this.lineHeight = (this.lineHeight * 10 - 1) / 10
+            this.updateLineHeight(this.lineHeight)
           })
         }
         .flexGrow(1)
@@ -60,8 +83,13 @@ export default struct ReaderBottomBar {
           }
           return resItem
         }))
-          .selected(Constants.DEFAULT_FONT_FAMILY_INDEX)
-          .value(Constants.FONT_FAMILY_TITLE_ARRAY[Constants.DEFAULT_FONT_FAMILY_INDEX])
+          .selected(this.fontFamilyIndex)
+          .value(this.fontFamilyTitle)
+          .onSelect((index: number, text: string) => {
+            this.fontFamilyIndex = index
+            this.fontFamilyTitle = text
+            this.updateFontFamilyIndex(index)
+          })
       }
       .width('100%')
       .margin({top: 20})
@@ -79,12 +107,13 @@ export default struct ReaderBottomBar {
               .backgroundColor(item)
               .border({
                 width: 1,
-                color: this.bgIndex === index ? '#FF0A59F7' : '#44000000',
+                color: this.bgColorIndex === index ? '#FF0A59F7' : '#44000000',
                 radius: 4,
                 style: BorderStyle.Solid
               })
               .onClick(() => {
-                this.bgIndex = index
+                this.bgColorIndex = index
+                this.updateBgColorIndex(this.bgColorIndex)
               })
           })
         }

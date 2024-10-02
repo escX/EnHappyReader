@@ -47,6 +47,18 @@ class MyPreference {
     return Constants.DEFAULT_BGCOLOR_INDEX
   }
 
+  setFontFamilyIndex(index: number): Promise<void> {
+    this.preference?.putSync('fontFamilyIndex', index)
+    return this.flush()
+  }
+
+  getFontFamilyIndex(): number {
+    if (!!this.preference) {
+      return this.preference.getSync('fontFamilyIndex', Constants.DEFAULT_FONT_FAMILY_INDEX) as number
+    }
+    return Constants.DEFAULT_FONT_FAMILY_INDEX
+  }
+
   delete(key: string): Promise<void> {
     this.preference?.deleteSync(key)
     return this.flush()
@@ -56,16 +68,8 @@ class MyPreference {
     return this.preference ? this.preference.flush() : Promise.reject()
   }
 
-  onDataChange(keys: Array<string>): Promise<Record<string, preferences.ValueType>> {
-    if (this.preference) {
-      return new Promise<Record<string, preferences.ValueType>>((resolve, reject) => {
-        this.preference!.on('dataChange', keys, (data) => {
-          resolve(data)
-        })
-      })
-    }
-
-    return Promise.reject()
+  onDataChange(keys: Array<string>, callback: Callback<Record<string, preferences.ValueType>>) {
+    this.preference?.on('dataChange', keys, callback)
   }
 }
 

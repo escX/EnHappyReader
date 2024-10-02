@@ -7,7 +7,7 @@ export enum BGColorType {
 }
 
 // 支持文件后缀枚举
-export enum SupportFiles {
+export enum SupportSuffix {
   TXT,
   PDF,
   EPUB

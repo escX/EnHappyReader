@@ -3,10 +3,13 @@ import { systemBar } from '../common/SystemBar'
 import TextReaderView from '../views/TextReaderView'
 import ReaderBottomBar from '../views/ReaderBottomBar'
 import { font } from '@kit.ArkUI'
+import { myPreference } from '../common/MyPreference'
 
 @Entry(LocalStorage.getShared())
 @Component
 struct Reader {
+  @State bgColorIndex: number = myPreference.getBgColorIndex()
+
   private bottomBarController: CustomDialogController = new CustomDialogController({
     builder: ReaderBottomBar(),
     isModal: false,
@@ -23,9 +26,22 @@ struct Reader {
   })
 
   aboutToAppear() {
+    this.registerFont()
+    this.watchStyle()
+  }
+
+  registerFont() {
     font.registerFont({
       familyName: 'Rainbow',
       familySrc: $rawfile('font/Rainbow.ttf')
+    })
+  }
+
+  watchStyle() {
+    myPreference.onDataChange(['bgColorIndex'], (data) => {
+      if (data.bgColorIndex !== undefined) {
+        this.bgColorIndex = data.bgColorIndex as number
+      }
     })
   }
 
@@ -56,7 +72,7 @@ struct Reader {
     }
     .width('100%')
     .height('100%')
-    .backgroundColor(Constants.BG_COLOR_ARRAY[Constants.DEFAULT_BGCOLOR_INDEX])
+    .backgroundColor(Constants.BG_COLOR_ARRAY[this.bgColorIndex])
     .parallelGesture(
       // todo: 自定义菜单：操作按钮，页面信息，配置
       GestureGroup(GestureMode.Exclusive,
