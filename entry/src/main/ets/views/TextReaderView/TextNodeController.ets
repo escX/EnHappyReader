@@ -1,5 +1,6 @@
 import { BuilderNode, FrameNode, NodeController } from '@kit.ArkUI'
 import Constants from '../../common/Constants'
+import { myPreference } from '../../common/MyPreference'
 
 interface SpanNode {
   content: string
@@ -14,12 +15,18 @@ interface VerticalMargin {
 interface BuildParams {
   nodes: Array<SpanNode>
   margin: VerticalMargin
+  fontSize: number
+  lineHeight: number
+  fontFamily: string
 }
 
 class TextNodeController extends NodeController {
   private textArray: Array<SpanNode> = []
   private topMargin: number = 0
   private bottomMargin: number = 0
+  private fontSize: number = myPreference.getFontSize()
+  private lineHeight: number = myPreference.getLineHeightRatio() * this.fontSize
+  private fontFamily: string = Constants.FONT_FAMILY_ARRAY[myPreference.getFontFamilyIndex()]
 
   makeNode(uiContext: UIContext): FrameNode | null {
     const textNode = new BuilderNode<[BuildParams]>(uiContext)
@@ -28,7 +35,10 @@ class TextNodeController extends NodeController {
       margin: {
         top: this.topMargin,
         bottom: this.bottomMargin
-      }
+      },
+      fontSize: this.fontSize,
+      lineHeight: this.lineHeight,
+      fontFamily: this.fontFamily
     })
     return textNode.getFrameNode()
   }
@@ -38,6 +48,12 @@ class TextNodeController extends NodeController {
     this.bottomMargin = bottom
   }
 
+  setStyle(fontSize: number, lineHeight: number, fontFamily: string) {
+    this.fontSize = fontSize
+    this.lineHeight = lineHeight
+    this.fontFamily = fontFamily
+  }
+
   append(lineArray: Array<SpanNode>) {
     this.textArray.push(...lineArray)
     this.rebuild()
@@ -45,6 +61,11 @@ class TextNodeController extends NodeController {
 
   prepend(lineArray: Array<SpanNode>) {
     this.textArray.unshift(...lineArray)
+    this.rebuild()
+  }
+
+  reset() {
+    this.textArray = []
     this.rebuild()
   }
 }
@@ -61,9 +82,9 @@ function TextBuilder(params: BuildParams) {
   .width('100%')
   .padding({left: Constants.SCREEN_MARGIN_X, right: Constants.SCREEN_MARGIN_X})
   .margin(params.margin)
-  .fontSize(Constants.DEFAULT_FONT_SIZE)
-  .lineHeight(Constants.DEFAULT_LINE_HEIGHT_RATIO * Constants.DEFAULT_FONT_SIZE)
-  .fontFamily(Constants.FONT_FAMILY_ARRAY[Constants.DEFAULT_FONT_FAMILY_INDEX])
+  .fontSize(params.fontSize)
+  .lineHeight(params.lineHeight)
+  .fontFamily(params.fontFamily)
   .copyOption(CopyOptions.InApp)
   .editMenuOptions( {
     onCreateMenu: (menuItems: Array<TextMenuItem>) => {

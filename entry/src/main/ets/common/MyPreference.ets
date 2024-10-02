@@ -1,6 +1,16 @@
 import { preferences } from '@kit.ArkData'
 import Constants from './Constants'
 
+class BookMark {
+  public index: number
+  public offset: number
+
+  constructor(index: number, offset: number) {
+    this.index = index
+    this.offset = offset
+  }
+}
+
 class MyPreference {
   private preference: preferences.Preferences | null = null
 
@@ -59,6 +69,31 @@ class MyPreference {
     return Constants.DEFAULT_FONT_FAMILY_INDEX
   }
 
+  setBookMark(path: string, mark: BookMark): Promise<void> {
+    const bookMark: object = this.preference?.getSync('bookMark', null) as object
+    if (bookMark) {
+      bookMark[path] = mark
+      this.preference?.putSync('bookMark', bookMark)
+    } else {
+      const newBookMark: Record<string, BookMark> = {}
+      newBookMark[path] = mark
+      this.preference?.putSync('bookMark', newBookMark)
+    }
+    return this.flush()
+  }
+
+  getBookMark(path?: string): BookMark {
+    const defaultMark = new BookMark(0, 0)
+    if (!!this.preference && !!path) {
+      const bookMark: object = this.preference.getSync('bookMark', null) as object
+      if (bookMark === null) {
+        return defaultMark
+      }
+      return bookMark[path] ?? defaultMark
+    }
+    return defaultMark
+  }
+
   delete(key: string): Promise<void> {
     this.preference?.deleteSync(key)
     return this.flush()
@@ -73,4 +108,5 @@ class MyPreference {
   }
 }
 
+export { BookMark }
 export const myPreference = new MyPreference()

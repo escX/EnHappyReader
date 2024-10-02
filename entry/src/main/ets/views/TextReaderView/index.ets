@@ -1,13 +1,9 @@
-import Constants from '../../common/Constants'
-import TextParser from './TextParser'
+import TextParser, { TextLineLocation } from './TextParser'
 import TextNodeController from './TextNodeController'
 import TextLayoutManage from './TextLayoutManage'
 import { BusinessError } from '@kit.BasicServicesKit'
-
-interface LinePosition {
-  index: number
-  offset: number
-}
+import Constants from '../../common/Constants'
+import { BookMark, myPreference } from '../../common/MyPreference'
 
 @Component
 export default struct TextReaderView {
@@ -21,47 +17,92 @@ export default struct TextReaderView {
   private textParser: TextParser = new TextParser()
   private textLayoutManage: TextLayoutManage | null = null
   private scroller: Scroller = new Scroller()
-  private startLineIndex: number = 0 // 首页首行在文件中的索引
-  private startOffset: number = 0 // 相对于初始行 startLine 顶部的距离，用于定位初始滚动条位置
+  private bookMark: BookMark = myPreference.getBookMark()
+  private fontSize: number = myPreference.getFontSize()
+  private lineHeight: number = myPreference.getLineHeightRatio() * this.fontSize
+  private fontFamily: string = Constants.FONT_FAMILY_ARRAY[myPreference.getFontFamilyIndex()]
   private maxUpDistance: number = 0 // 最大向上滚动距离，用于计算需要增量渲染的高度
   private maxDownDistance: number = 0 // 最大向下滚动距离，用于计算需要增量渲染的高度
   private totalOffset: number = 0 // 相对初始位置的滚动距离，用于计算需要增量渲染的高度
 
   aboutToAppear() {
-    this.textLayout()
+    this.setBookMark()
+    this.textLayout(this.bookMark.index, this.bookMark.offset)
+    this.watchStyle()
   }
 
-  textLayout() {
-    if (!!this.currBookPath) {
-      this.textParser.parseLocation(this.currBookPath).then((linesLocation) => {
-        this.textLayoutManage = new TextLayoutManage({
-          uiContext: this.uiContext,
-          filePath: this.currBookPath!,
-          startLineIndex: this.startLineIndex,
-          preRenderPage: 2,
-          pageHeight: this.screenH,
-          linesLocation,
-          textStyle: {
-            lineWidth: this.screenW - Constants.SCREEN_MARGIN_X * 2,
-            fontSize: Constants.DEFAULT_FONT_SIZE,
-            lineHeight: Constants.DEFAULT_LINE_HEIGHT_RATIO * Constants.DEFAULT_FONT_SIZE,
-            fontFamily: Constants.FONT_FAMILY_ARRAY[Constants.DEFAULT_FONT_FAMILY_INDEX],
-          }
-        })
+  // 获取缓存书签
+  setBookMark() {
+    this.bookMark = myPreference.getBookMark(this.currBookPath)
+  }
 
-        this.textNodeController.setMargin(this.statusBarHeight, this.naviBarHeight)
-        this.renderNextLines(this.startOffset)
-          .then(() => {
-            return this.renderPrevLines(0) // 必须保证 PrevLines 最后渲染，否则 scrollBy 可能不会作用
-          })
-          .then((prependHeight) => {
-            // 定位初始位置，如果不是首次进入，需要额外滚动 statusBarHeight 的高度
-            if (!(this.startLineIndex === 0 && this.startOffset === 0)) {
-              this.scroller.scrollBy(0, prependHeight + this.statusBarHeight + this.startOffset)
-            }
-          })
+  // 设置 textLayoutManage
+  setLayoutManage(linesLocation: TextLineLocation[], startLineIndex: number) {
+    if (!!this.currBookPath) {
+      this.textLayoutManage = new TextLayoutManage({
+        uiContext: this.uiContext,
+        filePath: this.currBookPath,
+        startLineIndex,
+        preRenderPage: 2,
+        pageHeight: this.screenH,
+        linesLocation,
+        textStyle: {
+          lineWidth: this.screenW - Constants.SCREEN_MARGIN_X * 2,
+          fontSize: this.fontSize,
+          lineHeight: this.lineHeight,
+          fontFamily: this.fontFamily,
+        }
       })
     }
+  }
+
+  // 渲染自定义节点
+  buildNode(startLineIndex: number, startLineOffset: number) {
+    this.textNodeController.setMargin(this.statusBarHeight, this.naviBarHeight)
+    this.textNodeController.setStyle(this.fontSize, this.lineHeight, this.fontFamily)
+    this.renderNextLines(startLineOffset)
+      .then(() => {
+        return this.renderPrevLines(0) // 必须保证 PrevLines 最后渲染，否则 scrollBy 可能不会作用
+      })
+      .then((prependHeight) => {
+        // 定位初始位置，如果不是首次进入，需要额外滚动 statusBarHeight 的高度
+        if (!(startLineIndex === 0 && startLineOffset === 0)) {
+          this.scroller.scrollBy(0, prependHeight + this.statusBarHeight + startLineOffset)
+        }
+      })
+  }
+
+  // 页面布局
+  textLayout(startLineIndex: number, startLineOffset: number) {
+    if (!!this.currBookPath) {
+      this.textParser.parseLocation(this.currBookPath).then((linesLocation) => {
+        this.setLayoutManage(linesLocation, 2)
+        this.buildNode(2, startLineOffset)
+      })
+    }
+  }
+
+  watchStyle() {
+    myPreference.onDataChange(['fontSize', 'lineHeightRatio', 'fontFamilyIndex'], (data) => {
+      if (data.fontSize !== undefined) {
+        this.fontSize = data.fontSize as number
+        this.lineHeight = (data.fontSize as number) * (myPreference.getLineHeightRatio() as number)
+      }
+
+      if (data.lineHeightRatio !== undefined) {
+        const ratio = data.lineHeightRatio as number
+        this.lineHeight = this.fontSize * ratio
+      }
+
+      if (data.fontFamilyIndex !== undefined) {
+        const index = data.fontFamilyIndex as number
+        this.fontFamily = Constants.FONT_FAMILY_ARRAY[index]
+      }
+
+      const bookMark = this.getBookMark()
+      this.textNodeController.reset()
+      this.textLayout(bookMark.index, bookMark.offset)
+    })
   }
 
   // 渲染下方的增量 Span，返回渲染的高度
@@ -112,17 +153,14 @@ export default struct TextReaderView {
     return this.totalOffset - this.maxDownDistance > this.screenH / 2
   }
 
-  // 当前视窗顶部第一行的索引，和相对该行顶部的偏移高度，用于下次打开应用的滚动定位
-  getLinePosition(): LinePosition {
+  // 获取当前视窗顶部第一行的索引，和相对该行顶部的偏移高度，用于保存书签
+  getBookMark(): BookMark {
     if (this.textLayoutManage) {
       const rect = this.scroller.getItemRect(0)
       if (rect.height !== 0) {
         const scrollOffset = -rect.y
         if (scrollOffset < this.statusBarHeight) {
-          return {
-            index: 0,
-            offset: 0
-          }
+          return new BookMark(0, 0)
         }
         const layoutNodes = this.textLayoutManage.getNodeRecord()
         if (layoutNodes.length > 0) {
@@ -135,18 +173,12 @@ export default struct TextReaderView {
           }
 
           const lineOffset = scrollOffset - (nodeHeight - layoutNodes[nodeIndex].height)
-          return {
-            index: layoutNodes[nodeIndex].index,
-            offset: lineOffset < 0 ? 0 : lineOffset
-          }
+          return new BookMark(layoutNodes[nodeIndex].index, lineOffset < 0 ? 0 : lineOffset)
         }
       }
     }
 
-    return {
-      index: this.startLineIndex,
-      offset: this.startOffset
-    }
+    return new BookMark(this.bookMark.index, this.bookMark.offset)
   }
 
   build() {

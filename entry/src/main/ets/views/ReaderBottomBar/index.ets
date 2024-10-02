@@ -38,7 +38,7 @@ export default struct ReaderBottomBar {
           Counter() {
             Text(this.fontSize.toString())
           }
-          .enableInc(this.fontSize < 20)
+          .enableInc(this.fontSize < 24)
           .enableDec(this.fontSize > 12)
           .onInc(() => {
             this.fontSize += 1
