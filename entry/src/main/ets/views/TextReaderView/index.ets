@@ -4,6 +4,7 @@ import TextLayoutManage from './TextLayoutManage'
 import { BusinessError } from '@kit.BasicServicesKit'
 import Constants from '../../common/Constants'
 import { BookMark, myPreference } from '../../common/MyPreference'
+import { preferences } from '@kit.ArkData'
 
 @Component
 export default struct TextReaderView {
@@ -12,13 +13,15 @@ export default struct TextReaderView {
   @LocalStorageProp('naviBarHeight') naviBarHeight: number = 0
   @LocalStorageProp('screenW') screenW: number = 0
   @LocalStorageProp('screenH') screenH: number = 0
-  @Prop @Watch('onPageStateChange') pageState: boolean
+  @Prop @Watch('onPageStateChange') pageState: boolean | null
   private uiContext: UIContext = this.getUIContext()
   private textNodeController: TextNodeController = new TextNodeController()
   private textParser: TextParser = new TextParser()
   private textLayoutManage: TextLayoutManage | null = null
   private scroller: Scroller = new Scroller()
   private bookMark: BookMark = myPreference.getBookMark()
+  private dataChangeKeys: Array<string> = ['fontSize', 'lineHeightRatio', 'fontFamilyIndex']
+  private bindObserve: (data: Record<string, preferences.ValueType>) => void = this.observe.bind(this)
   private fontSize: number = myPreference.getFontSize()
   private lineHeight: number = myPreference.getLineHeightRatio() * this.fontSize
   private fontFamily: string = Constants.FONT_FAMILY_ARRAY[myPreference.getFontFamilyIndex()]
@@ -29,7 +32,11 @@ export default struct TextReaderView {
   aboutToAppear() {
     this.getBookMark()
     this.textLayout(this.bookMark.index, this.bookMark.offset)
-    this.watchStyle()
+    this.addReadListener()
+  }
+
+  aboutToDisappear() {
+    this.removeReadListener()
   }
 
   onPageStateChange() {
@@ -97,27 +104,37 @@ export default struct TextReaderView {
     }
   }
 
-  watchStyle() {
-    myPreference.onDataChange(['fontSize', 'lineHeightRatio', 'fontFamilyIndex'], (data) => {
-      if (data.fontSize !== undefined) {
-        this.fontSize = data.fontSize as number
-        this.lineHeight = (data.fontSize as number) * (myPreference.getLineHeightRatio() as number)
-      }
+  // 监听阅读设置改变，重新布局
+  observe(data: Record<string, preferences.ValueType>) {
+    if (data.fontSize !== undefined) {
+      this.fontSize = data.fontSize as number
+      this.lineHeight = (data.fontSize as number) * (myPreference.getLineHeightRatio() as number)
+    }
 
-      if (data.lineHeightRatio !== undefined) {
-        const ratio = data.lineHeightRatio as number
-        this.lineHeight = this.fontSize * ratio
-      }
+    if (data.lineHeightRatio !== undefined) {
+      const ratio = data.lineHeightRatio as number
+      this.lineHeight = this.fontSize * ratio
+    }
 
-      if (data.fontFamilyIndex !== undefined) {
-        const index = data.fontFamilyIndex as number
-        this.fontFamily = Constants.FONT_FAMILY_ARRAY[index]
-      }
+    if (data.fontFamilyIndex !== undefined) {
+      const index = data.fontFamilyIndex as number
+      this.fontFamily = Constants.FONT_FAMILY_ARRAY[index]
+    }
 
-      const bookMark = this.getLinePosition()
-      this.textNodeController.reset()
-      this.textLayout(bookMark.index, bookMark.offset)
-    })
+    const bookMark = this.getLinePosition()
+    this.textNodeController.reset()
+    this.scroller.scrollTo({ xOffset: 0, yOffset: 0 })
+    this.textLayout(bookMark.index, bookMark.offset)
+  }
+
+  // 添加监听
+  addReadListener() {
+    myPreference.onDataChange(this.dataChangeKeys, this.bindObserve)
+  }
+
+  // 移除监听
+  removeReadListener() {
+    myPreference.offDataChange(this.dataChangeKeys, this.bindObserve)
   }
 
   // 渲染下方的增量 Span，返回渲染的高度

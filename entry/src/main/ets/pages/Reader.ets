@@ -9,7 +9,7 @@ import { myPreference } from '../common/MyPreference'
 @Component
 struct Reader {
   @State bgColorIndex: number = myPreference.getBgColorIndex()
-  @State pageState: boolean = true
+  @State pageState: boolean | null = null
 
   private bottomBarController: CustomDialogController = new CustomDialogController({
     builder: ReaderBottomBar(),

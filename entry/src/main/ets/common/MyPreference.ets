@@ -106,6 +106,10 @@ class MyPreference {
   onDataChange(keys: Array<string>, callback: Callback<Record<string, preferences.ValueType>>) {
     this.preference?.on('dataChange', keys, callback)
   }
+
+  offDataChange(keys: Array<string>, callback: Callback<Record<string, preferences.ValueType>>) {
+    this.preference?.off('dataChange', keys, callback)
+  }
 }
 
 export { BookMark }
