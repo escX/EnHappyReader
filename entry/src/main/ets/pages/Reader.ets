@@ -32,9 +32,11 @@ struct Reader {
   }
 
   registerFont() {
-    font.registerFont({
-      familyName: 'Rainbow',
-      familySrc: $rawfile('font/Rainbow.ttf')
+    Constants.FONT_FAMILY_ARRAY.forEach(item => {
+      font.registerFont({
+        familyName: item,
+        familySrc: $rawfile(`fonts/${item}.ttf`)
+      })
     })
   }
 
