@@ -31,7 +31,7 @@ export default class Constants {
   // 默认字体索引
   static readonly DEFAULT_FONT_FAMILY_INDEX = 0
   // 默认字号
-  static readonly DEFAULT_FONT_SIZE = 18
+  static readonly DEFAULT_FONT_SIZE = 20
   // 默认行高
   static readonly DEFAULT_LINE_HEIGHT_RATIO = 1.6
 }

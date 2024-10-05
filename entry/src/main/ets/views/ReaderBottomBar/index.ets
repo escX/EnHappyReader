@@ -28,105 +28,105 @@ export default struct ReaderBottomBar {
   }
 
   build() {
-    Column() {
+    Column({space: 20}) {
       // 第一行
-      Row() {
-        // 字号
-        Row() {
-          Text('字号')
-            .margin({right: 10})
-          Counter() {
-            Text(this.fontSize.toString())
-          }
-          .enableInc(this.fontSize < 24)
-          .enableDec(this.fontSize > 12)
-          .onInc(() => {
-            this.fontSize += 1
-            this.updateFontSize(this.fontSize)
-          })
-          .onDec(() => {
-            this.fontSize -= 1
-            this.updateFontSize(this.fontSize)
-          })
+      GridRow() {
+        GridCol({span: 2}) {
+          Text('字体').width('100%')
         }
-        .flexGrow(1)
-        // 行高
-        Row() {
-          Text('行高')
-            .margin({right: 10})
-          Counter() {
-            Text(this.lineHeight.toString())
-          }
-          .enableInc(this.lineHeight < 1.9)
-          .enableDec(this.lineHeight > 1.1)
-          .onInc(() => {
-            this.lineHeight = (this.lineHeight * 10 + 1) / 10
-            this.updateLineHeight(this.lineHeight)
-          })
-          .onDec(() => {
-            this.lineHeight = (this.lineHeight * 10 - 1) / 10
-            this.updateLineHeight(this.lineHeight)
-          })
+        GridCol({span: 10}) {
+          Select(Constants.FONT_FAMILY_TITLE_ARRAY.map(item => {
+            const resItem: SelectOption = {
+              value: item
+            }
+            return resItem
+          }))
+            .alignSelf(ItemAlign.Start)
+            .selected(this.fontFamilyIndex)
+            .value(this.fontFamilyTitle)
+            .onSelect((index: number, text: string) => {
+              this.fontFamilyIndex = index
+              this.fontFamilyTitle = text
+              this.updateFontFamilyIndex(index)
+            })
         }
-        .flexGrow(1)
       }
-      .width('100%')
-      .padding({left: 20, right: 20})
-      .justifyContent(FlexAlign.SpaceBetween)
+      .alignItems(ItemAlign.Center)
+
       // 第二行
-      Row() {
-        Text('字体')
-          .margin({right: 10})
-        Select(Constants.FONT_FAMILY_TITLE_ARRAY.map(item => {
-          const resItem: SelectOption = {
-            value: item
-          }
-          return resItem
-        }))
-          .selected(this.fontFamilyIndex)
-          .value(this.fontFamilyTitle)
-          .onSelect((index: number, text: string) => {
-            this.fontFamilyIndex = index
-            this.fontFamilyTitle = text
-            this.updateFontFamilyIndex(index)
-          })
-      }
-      .width('100%')
-      .margin({top: 20})
-      .padding({left: 20, right: 20})
-      .justifyContent(FlexAlign.Start)
-      // 第三行
-      Row() {
-        Text('背景')
-          .margin({right: 10})
-        Grid() {
-          ForEach(Constants.BG_COLOR_ARRAY, (item: string, index: number) => {
-            GridItem()
-              .width(54)
-              .height(34)
-              .backgroundColor(item)
-              .border({
-                width: 1,
-                color: this.bgColorIndex === index ? '#FF0A59F7' : '#44000000',
-                radius: 4,
-                style: BorderStyle.Solid
-              })
-              .onClick(() => {
-                this.bgColorIndex = index
-                this.updateBgColorIndex(this.bgColorIndex)
-              })
-          })
+      GridRow() {
+        GridCol({span: 2}) {
+          Text('字号').width('100%')
         }
-        .columnsGap(20)
+        GridCol({span: 10}) {
+          Slider({ style: SliderStyle.InSet, value: this.fontSize, step: 2, min: 16, max: 26 })
+            .alignSelf(ItemAlign.Start)
+            .showSteps(true)
+            .stepSize(6)
+            .onChange((value: number, mode: SliderChangeMode) => {
+              if (mode === 2) {
+                this.fontSize = value
+                this.updateFontSize(this.fontSize)
+              }
+            })
+        }
       }
-      .width('100%')
-      .margin({top: 20})
-      .padding({left: 20, right: 20})
-      .justifyContent(FlexAlign.Start)
+      .alignItems(ItemAlign.Center)
+
+      // 第三行
+      GridRow() {
+        GridCol({span: 2}) {
+          Text('行高').width('100%')
+        }
+        GridCol({span: 10}) {
+          Slider({ style: SliderStyle.InSet, value: this.lineHeight * 10, step: 2, min: 12, max: 22 })
+            .alignSelf(ItemAlign.Start)
+            .showSteps(true)
+            .stepSize(6)
+            .onChange((value: number, mode: SliderChangeMode) => {
+              if (mode === 2) {
+                this.lineHeight = value / 10
+                this.updateLineHeight(this.lineHeight)
+              }
+            })
+        }
+      }
+      .alignItems(ItemAlign.Center)
+
+      // 第四行
+      GridRow() {
+        GridCol({span: 2}) {
+          Text('背景').width('100%')
+        }
+        GridCol({span: 10}) {
+          Grid() {
+            ForEach(Constants.BG_COLOR_ARRAY, (item: string, index: number) => {
+              GridItem()
+                .height(36)
+                .backgroundColor(item)
+                .border({
+                  width: 1,
+                  color: this.bgColorIndex === index ? '#FF0A59F7' : '#44000000',
+                  radius: 4,
+                  style: BorderStyle.Solid
+                })
+                .onClick(() => {
+                  this.bgColorIndex = index
+                  this.updateBgColorIndex(this.bgColorIndex)
+                })
+            })
+          }
+          .alignSelf(ItemAlign.Start)
+          .height(36)
+          .columnsGap(20)
+          .columnsTemplate(Array(Constants.BG_COLOR_ARRAY.length).fill('1fr').join(' '))
+        }
+      }
+      .alignItems(ItemAlign.Center)
     }
     .width('100%')
     .backgroundColor(Color.White)
-    .padding({bottom: this.naviBarHeight, top: 30})
+    .padding({bottom: this.naviBarHeight, top: 30, left: 20, right: 20})
     .transition(TransitionEffect.OPACITY.animation({ duration: 300 }).combine(TransitionEffect.translate({ y: 300 })))
   }
 }
