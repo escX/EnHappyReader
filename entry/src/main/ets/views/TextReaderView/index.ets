@@ -46,11 +46,12 @@ export default struct TextReaderView {
   }
 
   // 设置缓存书签
-  setBookMark() {
+  setBookMark(): Promise<void> {
     if (!!this.currBookPath) {
       const mark = this.getLinePosition()
-      myPreference.setBookMark(this.currBookPath, mark)
+      return myPreference.setBookMark(this.currBookPath, mark)
     }
+    return Promise.reject()
   }
 
   // 获取缓存书签
@@ -122,9 +123,17 @@ export default struct TextReaderView {
     }
 
     const bookMark = this.getLinePosition()
-    this.textNodeController.reset()
     this.scroller.scrollTo({ xOffset: 0, yOffset: 0 })
-    this.textLayout(bookMark.index, bookMark.offset)
+    this.textNodeController.reset()
+    // 这里重置 textLayout，需要在 onDidScroll 结束后进行，否则会导致 totalOffset 计算错误
+    // 目前没有好的方法在 onDidScroll 结束后执行下面的方法，不能放在 onDidScroll 中进行，因为初始位置在顶部时，不会触发滚动，也就不会执行 onDidScroll
+    // 在模拟器中测试 onDidScroll 延时为 13ms，不同的机型可能延时有长有短，这里暂取 100ms
+    setTimeout(() => {
+      this.totalOffset = 0
+      this.maxDownDistance = 0
+      this.maxUpDistance = 0
+      this.textLayout(bookMark.index, bookMark.offset)
+    }, 100)
   }
 
   // 添加监听

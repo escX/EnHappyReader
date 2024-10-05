@@ -58,6 +58,11 @@ class TextLayoutManage {
     } else {
       this.startLineIndex = params.startLineIndex
     }
+
+    this.prevNodeRecord = {}
+    this.nextNodeRecord = {}
+    this.prevLines = []
+    this.nextLines = []
   }
 
   private getLineText(byteStart: number, byteLen: number): Promise<string> {
