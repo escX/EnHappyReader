@@ -44,6 +44,10 @@ export default struct ReaderBottomBar {
             .alignSelf(ItemAlign.Start)
             .selected(this.fontFamilyIndex)
             .value(this.fontFamilyTitle)
+            .menuBackgroundColor(Constants.FILL_COLOR_ARRAY[this.bgColorIndex])
+            .menuBackgroundBlurStyle(BlurStyle.NONE)
+            .selectedOptionBgColor(Constants.BG_COLOR_ARRAY[this.bgColorIndex])
+            .selectedOptionFontColor(Constants.STROKE_COLOR_ARRAY[this.bgColorIndex])
             .onSelect((index: number, text: string) => {
               this.fontFamilyIndex = index
               this.fontFamilyTitle = text
@@ -63,6 +67,7 @@ export default struct ReaderBottomBar {
             .alignSelf(ItemAlign.Start)
             .showSteps(true)
             .stepSize(6)
+            .selectedColor(Constants.STROKE_COLOR_ARRAY[this.bgColorIndex])
             .onChange((value: number, mode: SliderChangeMode) => {
               if (mode === 2) {
                 this.fontSize = value
@@ -83,6 +88,7 @@ export default struct ReaderBottomBar {
             .alignSelf(ItemAlign.Start)
             .showSteps(true)
             .stepSize(6)
+            .selectedColor(Constants.STROKE_COLOR_ARRAY[this.bgColorIndex])
             .onChange((value: number, mode: SliderChangeMode) => {
               if (mode === 2) {
                 this.lineHeight = value / 10
@@ -106,7 +112,7 @@ export default struct ReaderBottomBar {
                 .backgroundColor(item)
                 .border({
                   width: 1,
-                  color: this.bgColorIndex === index ? '#FF0A59F7' : '#44000000',
+                  color: this.bgColorIndex === index ? Constants.STROKE_COLOR_ARRAY[this.bgColorIndex] : '#00000000',
                   radius: 4,
                   style: BorderStyle.Solid
                 })
@@ -125,8 +131,7 @@ export default struct ReaderBottomBar {
       .alignItems(ItemAlign.Center)
     }
     .width('100%')
-    .backgroundColor(Color.White)
+    .backgroundColor(Constants.FILL_COLOR_ARRAY[this.bgColorIndex])
     .padding({bottom: this.naviBarHeight, top: 30, left: 20, right: 20})
-    .transition(TransitionEffect.OPACITY.animation({ duration: 300 }).combine(TransitionEffect.translate({ y: 300 })))
   }
 }

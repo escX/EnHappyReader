@@ -17,6 +17,8 @@ struct Reader {
     alignment: DialogAlignment.BottomStart,
     width: '100%',
     backgroundBlurStyle: BlurStyle.NONE,
+    shadow: ShadowStyle.OUTER_FLOATING_SM,
+    openAnimation: {tempo: 0, duration: 0},
     cornerRadius: {
       topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0
     },
@@ -63,7 +65,9 @@ struct Reader {
 
   openBottomBar() {
     systemBar.enableNaviBar(false)
-    this.bottomBarController.open()
+    setTimeout(() => {
+      this.bottomBarController.open() // 等 enableNaviBar 结束后再打开
+    }, 100)
   }
 
   closeBottomBar() {
