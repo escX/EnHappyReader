@@ -54,12 +54,14 @@ struct Reader {
     this.pageState = true
     systemBar.setFullScreen(true)
     systemBar.displayStatusBar(false)
+    systemBar.mainWindow?.setWindowKeepScreenOn(true)
   }
 
   onPageHide() {
     this.pageState = false
     systemBar.setFullScreen(false)
     systemBar.displayStatusBar(true, 'transparent')
+    systemBar.mainWindow?.setWindowKeepScreenOn(false)
     this.closeBottomBar()
   }
 

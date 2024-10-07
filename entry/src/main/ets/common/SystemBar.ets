@@ -3,7 +3,7 @@ import { window } from '@kit.ArkUI'
 type PresetBackground = 'white' | 'transparent'
 
 class SystemBar {
-  private mainWindow: window.Window | null = null
+  public mainWindow: window.Window | null = null
   private isShow: boolean = true
 
   setMainWindow(mainWindow: window.Window): void {
