@@ -69,6 +69,18 @@ class MyPreference {
     return Constants.DEFAULT_FONT_FAMILY_INDEX
   }
 
+  setPaddingX(margin: number): Promise<void> {
+    this.preference?.putSync('paddingX', margin)
+    return this.flush()
+  }
+
+  getPaddingX(): number {
+    if (!!this.preference) {
+      return this.preference.getSync('paddingX', Constants.DEFAULT_PADDING_X) as number
+    }
+    return Constants.DEFAULT_PADDING_X
+  }
+
   setBookMark(path: string, mark: BookMark): Promise<void> {
     const bookMark: object = this.preference?.getSync('bookMark', null) as object
     if (bookMark) {

@@ -6,13 +6,16 @@ export default struct ReaderBottomBar {
   private controller?: CustomDialogController
   private fontSizeRange: Array<number> = [18, 28]
   private lineHeightRange: Array<number> = [1.2, 2.2]
+  private paddingXRange: Array<number> = [6, 36]
   private fontSizeStep: number = 2
   private lineHeightStep: number = 0.2
+  private paddingXStep: number = 6
   @LocalStorageProp('naviBarHeight') naviBarHeight: number = 0
   @State fontSize: number = myPreference.getFontSize()
   @State lineHeight: number = myPreference.getLineHeightRatio()
   @State bgColorIndex: number = myPreference.getBgColorIndex()
   @State fontFamilyIndex: number = myPreference.getFontFamilyIndex()
+  @State paddingX: number = myPreference.getPaddingX()
   @State fontFamilyTitle: string = Constants.FONT_FAMILY_TITLE_ARRAY[this.fontFamilyIndex]
 
   updateFontSize(fontSize: number) {
@@ -29,6 +32,10 @@ export default struct ReaderBottomBar {
 
   updateFontFamilyIndex(fontFamilyIndex: number) {
     myPreference.setFontFamilyIndex(fontFamilyIndex)
+  }
+
+  updatePaddingX(x: number) {
+    myPreference.setPaddingX(x)
   }
 
   build() {
@@ -117,6 +124,33 @@ export default struct ReaderBottomBar {
       .alignItems(ItemAlign.Center)
 
       // 第四行
+      GridRow() {
+        GridCol({span: 2}) {
+          Text('边距').width('100%')
+        }
+        GridCol({span: 10}) {
+          Slider({
+            style: SliderStyle.InSet,
+            value: this.paddingX,
+            step: this.paddingXStep,
+            min: this.paddingXRange[0],
+            max: this.paddingXRange[1]
+          })
+            .alignSelf(ItemAlign.Start)
+            .showSteps(true)
+            .stepSize(6)
+            .selectedColor(Constants.STROKE_COLOR_ARRAY[this.bgColorIndex])
+            .onChange((value: number, mode: SliderChangeMode) => {
+              if (mode === 2) {
+                this.paddingX = value
+                this.updatePaddingX(this.paddingX)
+              }
+            })
+        }
+      }
+      .alignItems(ItemAlign.Center)
+
+      // 第五行
       GridRow() {
         GridCol({span: 2}) {
           Text('背景').width('100%')

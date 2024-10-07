@@ -17,8 +17,8 @@ export default class Constants {
   static readonly FONT_FAMILY_ARRAY = ['HarmonyOS Sans', 'AlbertSans', 'Montserrat', 'Dosis', 'Delius', 'Kalam', 'Lumanosimo', 'Bitter', 'Rosarivo', 'Georgia', 'Merriweather']
   // 可选字体标题
   static readonly FONT_FAMILY_TITLE_ARRAY = ['系统默认', 'AlbertSans', 'Montserrat', 'Dosis', 'Delius', 'Kalam', 'Lumanosimo', 'Bitter', 'Georgia', 'Rosarivo', 'Merriweather']
-  // 屏幕的左右空白边距
-  static readonly SCREEN_MARGIN_X = 16
+  // 默认左右边距
+  static readonly DEFAULT_PADDING_X = 18
   // 默认背景色索引
   static readonly DEFAULT_BGCOLOR_INDEX = 0
   // 默认字体索引

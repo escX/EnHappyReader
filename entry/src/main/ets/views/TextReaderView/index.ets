@@ -20,11 +20,12 @@ export default struct TextReaderView {
   private textLayoutManage: TextLayoutManage | null = null
   private scroller: Scroller = new Scroller()
   private bookMark: BookMark = myPreference.getBookMark()
-  private dataChangeKeys: Array<string> = ['fontSize', 'lineHeightRatio', 'fontFamilyIndex']
+  private dataChangeKeys: Array<string> = ['fontSize', 'lineHeightRatio', 'fontFamilyIndex', 'paddingX']
   private bindObserve: (data: Record<string, preferences.ValueType>) => void = this.observe.bind(this)
   private fontSize: number = myPreference.getFontSize()
   private lineHeight: number = myPreference.getLineHeightRatio() * this.fontSize
   private fontFamily: string = Constants.FONT_FAMILY_ARRAY[myPreference.getFontFamilyIndex()]
+  private paddingX: number = myPreference.getPaddingX()
   private maxUpDistance: number = 0 // 最大向上滚动距离，用于计算需要增量渲染的高度
   private maxDownDistance: number = 0 // 最大向下滚动距离，用于计算需要增量渲染的高度
   private totalOffset: number = 0 // 相对初始位置的滚动距离，用于计算需要增量渲染的高度
@@ -70,7 +71,7 @@ export default struct TextReaderView {
         pageHeight: this.screenH,
         linesLocation,
         textStyle: {
-          lineWidth: this.screenW - Constants.SCREEN_MARGIN_X * 2,
+          lineWidth: this.screenW - this.paddingX * 2,
           fontSize: this.fontSize,
           lineHeight: this.lineHeight,
           fontFamily: this.fontFamily,
@@ -82,6 +83,7 @@ export default struct TextReaderView {
   // 渲染自定义节点
   buildNode(startLineIndex: number, startLineOffset: number) {
     this.textNodeController.setMargin(this.statusBarHeight, this.naviBarHeight)
+    this.textNodeController.setPadding(this.paddingX)
     this.textNodeController.setStyle(this.fontSize, this.lineHeight, this.fontFamily)
     this.renderNextLines(startLineOffset)
       .then(() => {
@@ -120,6 +122,11 @@ export default struct TextReaderView {
     if (data.fontFamilyIndex !== undefined) {
       const index = data.fontFamilyIndex as number
       this.fontFamily = Constants.FONT_FAMILY_ARRAY[index]
+    }
+
+    if (data.paddingX !== undefined) {
+      const x = data.paddingX as number
+      this.paddingX = x
     }
 
     const bookMark = this.getLinePosition()

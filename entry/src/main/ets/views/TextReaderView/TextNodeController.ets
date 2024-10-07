@@ -14,10 +14,11 @@ interface VerticalMargin {
 
 interface BuildParams {
   nodes: Array<SpanNode>
-  margin: VerticalMargin
+  marginY: VerticalMargin
   fontSize: number
   lineHeight: number
   fontFamily: string
+  paddingX: number
 }
 
 class TextNodeController extends NodeController {
@@ -27,18 +28,20 @@ class TextNodeController extends NodeController {
   private fontSize: number = myPreference.getFontSize()
   private lineHeight: number = myPreference.getLineHeightRatio() * this.fontSize
   private fontFamily: string = Constants.FONT_FAMILY_ARRAY[myPreference.getFontFamilyIndex()]
+  private paddingX: number = myPreference.getPaddingX()
 
   makeNode(uiContext: UIContext): FrameNode | null {
     const textNode = new BuilderNode<[BuildParams]>(uiContext)
     textNode.build(wrapBuilder(TextBuilder), {
       nodes: this.textArray,
-      margin: {
+      marginY: {
         top: this.topMargin,
         bottom: this.bottomMargin
       },
       fontSize: this.fontSize,
       lineHeight: this.lineHeight,
-      fontFamily: this.fontFamily
+      fontFamily: this.fontFamily,
+      paddingX: this.paddingX
     })
     return textNode.getFrameNode()
   }
@@ -46,6 +49,10 @@ class TextNodeController extends NodeController {
   setMargin(top: number, bottom: number) {
     this.topMargin = top
     this.bottomMargin = bottom
+  }
+
+  setPadding(x: number) {
+    this.paddingX = x
   }
 
   setStyle(fontSize: number, lineHeight: number, fontFamily: string) {
@@ -80,8 +87,8 @@ function TextBuilder(params: BuildParams) {
     )
   }
   .width('100%')
-  .padding({left: Constants.SCREEN_MARGIN_X, right: Constants.SCREEN_MARGIN_X})
-  .margin(params.margin)
+  .padding({left: params.paddingX, right: params.paddingX})
+  .margin(params.marginY)
   .fontSize(params.fontSize)
   .lineHeight(params.lineHeight)
   .fontFamily(params.fontFamily)
