@@ -4,6 +4,10 @@ import { myPreference } from '../../common/MyPreference'
 @CustomDialog
 export default struct ReaderBottomBar {
   private controller?: CustomDialogController
+  private fontSizeRange: Array<number> = [18, 28]
+  private lineHeightRange: Array<number> = [1.2, 2.2]
+  private fontSizeStep: number = 2
+  private lineHeightStep: number = 0.2
   @LocalStorageProp('naviBarHeight') naviBarHeight: number = 0
   @State fontSize: number = myPreference.getFontSize()
   @State lineHeight: number = myPreference.getLineHeightRatio()
@@ -28,7 +32,7 @@ export default struct ReaderBottomBar {
   }
 
   build() {
-    Column({space: 20}) {
+    Column({space: 16}) {
       // 第一行
       GridRow() {
         GridCol({span: 2}) {
@@ -42,6 +46,7 @@ export default struct ReaderBottomBar {
             return resItem
           }))
             .alignSelf(ItemAlign.Start)
+            .divider(null)
             .selected(this.fontFamilyIndex)
             .value(this.fontFamilyTitle)
             .menuBackgroundColor(Constants.FILL_COLOR_ARRAY[this.bgColorIndex])
@@ -63,7 +68,13 @@ export default struct ReaderBottomBar {
           Text('字号').width('100%')
         }
         GridCol({span: 10}) {
-          Slider({ style: SliderStyle.InSet, value: this.fontSize, step: 2, min: 16, max: 26 })
+          Slider({
+            style: SliderStyle.InSet,
+            value: this.fontSize,
+            step: this.fontSizeStep,
+            min: this.fontSizeRange[0],
+            max: this.fontSizeRange[1]
+          })
             .alignSelf(ItemAlign.Start)
             .showSteps(true)
             .stepSize(6)
@@ -84,7 +95,13 @@ export default struct ReaderBottomBar {
           Text('行高').width('100%')
         }
         GridCol({span: 10}) {
-          Slider({ style: SliderStyle.InSet, value: this.lineHeight * 10, step: 2, min: 12, max: 22 })
+          Slider({
+            style: SliderStyle.InSet,
+            value: this.lineHeight * 10,
+            step: this.lineHeightStep * 10,
+            min: this.lineHeightRange[0] * 10,
+            max: this.lineHeightRange[1] * 10
+          })
             .alignSelf(ItemAlign.Start)
             .showSteps(true)
             .stepSize(6)
@@ -132,6 +149,6 @@ export default struct ReaderBottomBar {
     }
     .width('100%')
     .backgroundColor(Constants.FILL_COLOR_ARRAY[this.bgColorIndex])
-    .padding({bottom: this.naviBarHeight, top: 30, left: 20, right: 20})
+    .padding({bottom: this.naviBarHeight, top: 20, left: 20, right: 20})
   }
 }
