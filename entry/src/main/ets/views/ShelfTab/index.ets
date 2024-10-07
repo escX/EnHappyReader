@@ -8,7 +8,7 @@ import importBook from './importBook'
 @Component
 export default struct ShelfTab {
   @State bookList: Array<BookInfo> = []
-  @LocalStorageLink('currBookPath') currBookPath: string | undefined = undefined
+  @LocalStorageLink('currBookName') currBookName: string | undefined = undefined
   private textParser: TextParser = new TextParser()
   private context = getContext()
 
@@ -22,7 +22,7 @@ export default struct ShelfTab {
       Promise.all(
         files.map(item => {
           if (item.type === SupportSuffix.TXT) {
-            return this.setTextParseStore(`${this.context.filesDir}/${item.name}`) as Promise<void>
+            return this.setTextParseStore(item.name) as Promise<void>
           }
 
           return Promise.resolve()
@@ -33,10 +33,10 @@ export default struct ShelfTab {
     })
   }
 
-  setTextParseStore(path: string): Promise<void> {
+  setTextParseStore(name: string): Promise<void> {
     if (!!myKVStore.kvStore) {
-      return this.textParser.parse(path).then((parseValue) => {
-        return myKVStore.kvStore!.put(path, JSON.stringify(parseValue))
+      return this.textParser.parse(`${this.context.filesDir}/${name}`).then((parseValue) => {
+        return myKVStore.kvStore!.put(name, JSON.stringify(parseValue))
       })
     }
     return Promise.reject()
@@ -73,7 +73,7 @@ export default struct ShelfTab {
             focused: { .backgroundColor('#eeeeee').opacity(0.8) },
           })
           .onClick(() => {
-            this.currBookPath = `${this.context.filesDir}/${item.name}`
+            this.currBookName = item.name
             router.pushUrl({ url: 'pages/Reader' })
           })
         })

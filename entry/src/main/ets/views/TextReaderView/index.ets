@@ -9,13 +9,14 @@ import { myKVStore } from '../../common/MyKVStore'
 
 @Component
 export default struct TextReaderView {
-  @LocalStorageProp('currBookPath') currBookPath: string | undefined = undefined
+  @LocalStorageProp('currBookName') currBookName: string | undefined = undefined
   @LocalStorageProp('statusBarHeight') statusBarHeight: number = 0
   @LocalStorageProp('naviBarHeight') naviBarHeight: number = 0
   @LocalStorageProp('screenW') screenW: number = 0
   @LocalStorageProp('screenH') screenH: number = 0
   @Prop @Watch('onPageStateChange') pageState: boolean | null
   private uiContext: UIContext = this.getUIContext()
+  private context = getContext()
   private textNodeController: TextNodeController = new TextNodeController()
   private textLayoutManage: TextLayoutManage | null = null
   private scroller: Scroller = new Scroller()
@@ -48,24 +49,24 @@ export default struct TextReaderView {
 
   // 设置缓存书签
   setBookMark(): Promise<void> {
-    if (!!this.currBookPath) {
+    if (!!this.currBookName) {
       const mark = this.getLinePosition()
-      return myPreference.setBookMark(this.currBookPath, mark)
+      return myPreference.setBookMark(this.currBookName, mark)
     }
     return Promise.reject()
   }
 
   // 获取缓存书签
   getBookMark() {
-    this.bookMark = myPreference.getBookMark(this.currBookPath)
+    this.bookMark = myPreference.getBookMark(this.currBookName)
   }
 
   // 设置 textLayoutManage
   setLayoutManage(linesLocation: ParseResult[], startLineIndex: number) {
-    if (!!this.currBookPath) {
+    if (!!this.currBookName) {
       this.textLayoutManage = new TextLayoutManage({
         uiContext: this.uiContext,
-        filePath: this.currBookPath,
+        filePath: `${this.context.filesDir}/${this.currBookName}`,
         startLineIndex,
         preRenderPage: 2,
         pageHeight: this.screenH,
@@ -99,8 +100,8 @@ export default struct TextReaderView {
 
   // 页面布局
   textLayout(startLineIndex: number, startLineOffset: number) {
-    if (!!this.currBookPath && myKVStore.kvStore) {
-      myKVStore.kvStore.get(this.currBookPath).then(value => {
+    if (!!this.currBookName && myKVStore.kvStore) {
+      myKVStore.kvStore.get(this.currBookName).then(value => {
         if (!!value) {
           const linesLocation: LineLocation[] = JSON.parse(value as string).map((item: ParseResult) => {
             const lineLocation: LineLocation = {

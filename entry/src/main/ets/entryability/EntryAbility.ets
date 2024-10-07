@@ -11,7 +11,7 @@ interface ILocalStorage {
   screenH: number
   statusBarHeight: number
   naviBarHeight: number
-  currBookPath: string | undefined
+  currBookName: string | undefined
 }
 
 export default class EntryAbility extends UIAbility {
@@ -48,7 +48,7 @@ export default class EntryAbility extends UIAbility {
           screenH: px2vp(displaySize.height),
           statusBarHeight: px2vp(statusBar.topRect.height),
           naviBarHeight: px2vp(naviBar.bottomRect.height),
-          currBookPath: undefined
+          currBookName: undefined
         }
 
         return Promise.resolve(myLocalStorage)
