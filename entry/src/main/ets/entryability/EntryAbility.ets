@@ -4,6 +4,7 @@ import { display, window } from '@kit.ArkUI';
 import { BusinessError } from '@kit.BasicServicesKit'
 import { systemBar } from '../common/SystemBar';
 import { myPreference } from '../common/MyPreference';
+import { myKVStore } from '../common/MyKVStore';
 
 interface ILocalStorage {
   screenW: number
@@ -31,6 +32,9 @@ export default class EntryAbility extends UIAbility {
       .then((windowClass) => {
         mainWindow = windowClass
         return myPreference.init(this.context)
+      })
+      .then(() => {
+        return myKVStore.init(this.context)
       })
       .then(() => {
         systemBar.setMainWindow(mainWindow)
