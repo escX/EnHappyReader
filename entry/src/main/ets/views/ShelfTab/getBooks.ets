@@ -1,8 +1,9 @@
 import fs, { ListFileOptions } from '@ohos.file.fs'
 import { BusinessError } from '@kit.BasicServicesKit'
-import Constants from '../../common/Constants'
+import Constants, { SupportSuffix } from '../../common/Constants'
 
 interface BookInfo {
+  type: SupportSuffix | undefined
   name: string
   size: number
   atime: number
@@ -40,8 +41,18 @@ function getBooks(context: Context): Promise<Array<BookInfo>> {
 
         result.forEach((item, index) => {
           if (item.status === 'fulfilled') {
+            const name = filenames[index]
+            let type: SupportSuffix | undefined
+            if (name.endsWith('.txt')) {
+              type = SupportSuffix.TXT
+            } else if (name.endsWith('.pdf')) {
+              type = SupportSuffix.PDF
+            } else if (name.endsWith('.epub')) {
+              type = SupportSuffix.EPUB
+            }
             fulfilledRes.push({
-              name: filenames[index],
+              type,
+              name,
               size: item.value.size,
               atime: item.value.atime
             })

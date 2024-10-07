@@ -1,10 +1,11 @@
-import TextParser, { TextLineLocation } from './TextParser'
+import { LineLocation, ParseResult } from './TextParser'
 import TextNodeController from './TextNodeController'
 import TextLayoutManage from './TextLayoutManage'
 import { BusinessError } from '@kit.BasicServicesKit'
 import Constants from '../../common/Constants'
 import { BookMark, myPreference } from '../../common/MyPreference'
 import { preferences } from '@kit.ArkData'
+import { myKVStore } from '../../common/MyKVStore'
 
 @Component
 export default struct TextReaderView {
@@ -16,7 +17,6 @@ export default struct TextReaderView {
   @Prop @Watch('onPageStateChange') pageState: boolean | null
   private uiContext: UIContext = this.getUIContext()
   private textNodeController: TextNodeController = new TextNodeController()
-  private textParser: TextParser = new TextParser()
   private textLayoutManage: TextLayoutManage | null = null
   private scroller: Scroller = new Scroller()
   private bookMark: BookMark = myPreference.getBookMark()
@@ -61,7 +61,7 @@ export default struct TextReaderView {
   }
 
   // 设置 textLayoutManage
-  setLayoutManage(linesLocation: TextLineLocation[], startLineIndex: number) {
+  setLayoutManage(linesLocation: ParseResult[], startLineIndex: number) {
     if (!!this.currBookPath) {
       this.textLayoutManage = new TextLayoutManage({
         uiContext: this.uiContext,
@@ -99,10 +99,19 @@ export default struct TextReaderView {
 
   // 页面布局
   textLayout(startLineIndex: number, startLineOffset: number) {
-    if (!!this.currBookPath) {
-      this.textParser.parseLocation(this.currBookPath).then((linesLocation) => {
-        this.setLayoutManage(linesLocation, startLineIndex)
-        this.buildNode(startLineIndex, startLineOffset)
+    if (!!this.currBookPath && myKVStore.kvStore) {
+      myKVStore.kvStore.get(this.currBookPath).then(value => {
+        if (!!value) {
+          const linesLocation: LineLocation[] = JSON.parse(value as string).map((item: ParseResult) => {
+            const lineLocation: LineLocation = {
+              byteStart: item.byteStart,
+              byteLen: item.byteLen
+            }
+            return lineLocation
+          })
+          this.setLayoutManage(linesLocation, startLineIndex)
+          this.buildNode(startLineIndex, startLineOffset)
+        }
       })
     }
   }

@@ -1,5 +1,5 @@
 import fs from '@ohos.file.fs'
-import { TextLineLocation } from './TextParser'
+import { LineLocation, ParseResult } from './TextParser'
 import { SpanNode } from './TextNodeController'
 
 interface TextLayoutParams {
@@ -8,7 +8,7 @@ interface TextLayoutParams {
   startLineIndex: number
   preRenderPage: number
   pageHeight: number
-  linesLocation: Array<TextLineLocation>
+  linesLocation: Array<LineLocation>
   textStyle: TextStyle
 }
 
@@ -36,7 +36,7 @@ class TextLayoutManage {
   private startLineIndex: number
   private preRenderPage: number
   private pageHeight: number
-  private linesLocation: Array<TextLineLocation>
+  private linesLocation: Array<ParseResult>
   private textStyle: TextStyle
   private prevNodeRecord: Record<string, NodeRecord> = {} // 向上渲染的 Span 数据，包含行索引、内容和高度，用于获取已渲染部分的行高度和总高度
   private nextNodeRecord: Record<string, NodeRecord> = {} // 向下渲染的 Span 数据，包含行索引、内容和高度，用于获取已渲染部分的行高度和总高度

@@ -1,4 +1,7 @@
 import { router } from '@kit.ArkUI'
+import { SupportSuffix } from '../../common/Constants'
+import { myKVStore } from '../../common/MyKVStore'
+import TextParser from '../TextReaderView/TextParser'
 import getBooks, { BookInfo } from './getBooks'
 import importBook from './importBook'
 
@@ -6,6 +9,7 @@ import importBook from './importBook'
 export default struct ShelfTab {
   @State bookList: Array<BookInfo> = []
   @LocalStorageLink('currBookPath') currBookPath: string | undefined = undefined
+  private textParser: TextParser = new TextParser()
   private context = getContext()
 
   aboutToAppear() {
@@ -15,7 +19,27 @@ export default struct ShelfTab {
   loadBookList() {
     getBooks(this.context).then((files) => {
       this.bookList = files
+      Promise.all(
+        files.map(item => {
+          if (item.type === SupportSuffix.TXT) {
+            return this.setTextParseStore(`${this.context.filesDir}/${item.name}`) as Promise<void>
+          }
+
+          return Promise.resolve()
+        })
+      ).then(() => {
+        console.log('testyy end')
+      })
     })
+  }
+
+  setTextParseStore(path: string): Promise<void> {
+    if (!!myKVStore.kvStore) {
+      return this.textParser.parse(path).then((parseValue) => {
+        return myKVStore.kvStore!.put(path, JSON.stringify(parseValue))
+      })
+    }
+    return Promise.reject()
   }
 
   build() {
