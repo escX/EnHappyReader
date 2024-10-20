@@ -1,6 +1,6 @@
 import { LineLocation, ParseResult } from './TextParser'
-import TextNodeController from './TextNodeController'
-import TextLayoutManage from './TextLayoutManage'
+import TextLayoutManage, { SpanNode } from './TextLayoutManage'
+import TextSpanNode from './TextSpanNode'
 import { BusinessError } from '@kit.BasicServicesKit'
 import Constants from '../../common/Constants'
 import { BookMark, myPreference } from '../../common/MyPreference'
@@ -15,18 +15,18 @@ export default struct TextReaderView {
   @LocalStorageProp('screenW') screenW: number = 0
   @LocalStorageProp('screenH') screenH: number = 0
   @Prop @Watch('onPageStateChange') pageState: boolean | null
+  @State textSpanArray: Array<SpanNode> = []
+  @State fontSize: number = myPreference.getFontSize()
+  @State lineHeight: number = myPreference.getLineHeightRatio() * this.fontSize
+  @State fontFamily: string = Constants.FONT_FAMILY_ARRAY[myPreference.getFontFamilyIndex()]
+  @State paddingX: number = myPreference.getPaddingX()
   private uiContext: UIContext = this.getUIContext()
   private context = getContext()
-  private textNodeController: TextNodeController = new TextNodeController()
   private textLayoutManage: TextLayoutManage | null = null
   private scroller: Scroller = new Scroller()
   private bookMark: BookMark = myPreference.getBookMark()
   private dataChangeKeys: Array<string> = ['fontSize', 'lineHeightRatio', 'fontFamilyIndex', 'paddingX']
   private bindObserve: (data: Record<string, preferences.ValueType>) => void = this.observe.bind(this)
-  private fontSize: number = myPreference.getFontSize()
-  private lineHeight: number = myPreference.getLineHeightRatio() * this.fontSize
-  private fontFamily: string = Constants.FONT_FAMILY_ARRAY[myPreference.getFontFamilyIndex()]
-  private paddingX: number = myPreference.getPaddingX()
   private maxUpDistance: number = 0 // 最大向上滚动距离，用于计算需要增量渲染的高度
   private maxDownDistance: number = 0 // 最大向下滚动距离，用于计算需要增量渲染的高度
   private totalOffset: number = 0 // 相对初始位置的滚动距离，用于计算需要增量渲染的高度
@@ -83,9 +83,6 @@ export default struct TextReaderView {
 
   // 渲染自定义节点
   buildNode(startLineIndex: number, startLineOffset: number) {
-    this.textNodeController.setMargin(this.statusBarHeight, this.naviBarHeight)
-    this.textNodeController.setPadding(this.paddingX)
-    this.textNodeController.setStyle(this.fontSize, this.lineHeight, this.fontFamily)
     this.renderNextLines(startLineOffset)
       .then(() => {
         return this.renderPrevLines(0) // 必须保证 PrevLines 最后渲染，否则 scrollBy 可能不会作用
@@ -140,17 +137,17 @@ export default struct TextReaderView {
     }
 
     const bookMark = this.getLinePosition()
+    this.resetLayout()
+    this.textLayout(bookMark.index, bookMark.offset)
+  }
+
+  // 重置布局
+  resetLayout() {
     this.scroller.scrollTo({ xOffset: 0, yOffset: 0 })
-    this.textNodeController.reset()
-    // 这里重置 textLayout，需要在 onDidScroll 结束后进行，否则会导致 totalOffset 计算错误
-    // 目前没有好的方法在 onDidScroll 结束后执行下面的方法，不能放在 onDidScroll 中进行，因为初始位置在顶部时，不会触发滚动，也就不会执行 onDidScroll
-    // 在模拟器中测试 onDidScroll 延时为 13ms，不同的机型可能延时有长有短，这里暂取 100ms
-    setTimeout(() => {
-      this.totalOffset = 0
-      this.maxDownDistance = 0
-      this.maxUpDistance = 0
-      this.textLayout(bookMark.index, bookMark.offset)
-    }, 100)
+    this.textSpanArray = []
+    this.totalOffset = 0
+    this.maxDownDistance = 0
+    this.maxUpDistance = 0
   }
 
   // 添加监听
@@ -170,7 +167,7 @@ export default struct TextReaderView {
         .then((data) => {
           let appendHeight = 0
           if (data.length > 0) {
-            this.textNodeController.append(data)
+            this.textSpanArray.push(...data)
             this.maxDownDistance = downDistance
             appendHeight = this.textLayoutManage?.getIncrementNextHeight() ?? 0
           }
@@ -189,7 +186,7 @@ export default struct TextReaderView {
         .then((data) => {
           let prependHeight = 0
           if (data.length > 0) {
-            this.textNodeController.prepend(data)
+            this.textSpanArray.unshift(...data)
             this.maxUpDistance = upDistance
             prependHeight = this.textLayoutManage?.getIncrementPrevHeight() ?? 0
           }
@@ -241,8 +238,15 @@ export default struct TextReaderView {
 
   build() {
     Scroll(this.scroller) {
-      NodeContainer(this.textNodeController)
-        .width('100%')
+      TextSpanNode({
+        textSpanArray: this.textSpanArray,
+        paddingTop: this.statusBarHeight,
+        paddingBottom: this.naviBarHeight,
+        paddingX: this.paddingX,
+        fontSize: this.fontSize,
+        lineHeight: this.lineHeight,
+        fontFamily: this.fontFamily
+      })
     }
     .height('100%')
     .width('100%')

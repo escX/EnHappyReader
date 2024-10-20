@@ -1,6 +1,10 @@
 import fs from '@ohos.file.fs'
 import { LineLocation, ParseResult } from './TextParser'
-import { SpanNode } from './TextNodeController'
+
+interface SpanNode {
+  content: string
+  index: number
+}
 
 interface TextLayoutParams {
   uiContext: UIContext
@@ -264,4 +268,5 @@ class TextLayoutManage {
   }
 }
 
+export { SpanNode }
 export default TextLayoutManage

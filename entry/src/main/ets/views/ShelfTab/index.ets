@@ -27,13 +27,12 @@ export default struct ShelfTab {
 
           return Promise.resolve()
         })
-      ).then(() => {
-        console.log('testyy end')
-      })
+      )
     })
   }
 
   setTextParseStore(name: string): Promise<void> {
+    // todo: setTimeout 验证大文件解析事件长的情况，进入read页面读取数据应该有loading
     if (!!myKVStore.kvStore) {
       return this.textParser.parse(`${this.context.filesDir}/${name}`).then((parseValue) => {
         return myKVStore.kvStore!.put(name, JSON.stringify(parseValue))
