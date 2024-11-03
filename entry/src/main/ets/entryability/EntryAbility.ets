@@ -1,10 +1,10 @@
-import { AbilityConstant, UIAbility, Want } from '@kit.AbilityKit';
-import { hilog } from '@kit.PerformanceAnalysisKit';
-import { display, window } from '@kit.ArkUI';
+import { AbilityConstant, UIAbility, Want } from '@kit.AbilityKit'
+import { hilog } from '@kit.PerformanceAnalysisKit'
+import { display, window } from '@kit.ArkUI'
 import { BusinessError } from '@kit.BasicServicesKit'
-import { systemBar } from '../common/SystemBar';
-import { myPreference } from '../common/MyPreference';
-import { myKVStore } from '../common/MyKVStore';
+import { systemBar } from '../common/SystemBar'
+import { myPreference } from '../common/MyPreference'
+import { myKVStore } from '../common/MyKVStore'
 
 interface ILocalStorage {
   screenW: number

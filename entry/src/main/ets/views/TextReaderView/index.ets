@@ -98,9 +98,17 @@ export default struct TextReaderView {
   // 页面布局
   textLayout(startLineIndex: number, startLineOffset: number) {
     if (!!this.currBookName && myKVStore.kvStore) {
-      myKVStore.kvStore.get(this.currBookName).then(value => {
-        if (!!value) {
-          const linesLocation: LineLocation[] = JSON.parse(value as string).map((item: ParseResult) => {
+      // 拼接解析后的数据
+      const bookSliceNumber: number = myPreference.getBookSlice(this.currBookName)
+      const getSliceStrAsync: Array<Promise<string>> = []
+      for (let i = 0; i < bookSliceNumber; i++) {
+        getSliceStrAsync.push(myKVStore.kvStore.get(`${this.currBookName}_${i}`) as Promise<string>)
+      }
+      Promise.all(getSliceStrAsync).then((value) => {
+        const parseStr = value.join('')
+        try {
+          const parseData: Array<ParseResult> = JSON.parse(parseStr)
+          const linesLocation: LineLocation[] = parseData.map(item => {
             const lineLocation: LineLocation = {
               byteStart: item.byteStart,
               byteLen: item.byteLen
@@ -109,7 +117,7 @@ export default struct TextReaderView {
           })
           this.setLayoutManage(linesLocation, startLineIndex)
           this.buildNode(startLineIndex, startLineOffset)
-        }
+        } catch(error) {}
       })
     }
   }

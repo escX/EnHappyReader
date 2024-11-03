@@ -81,29 +81,53 @@ class MyPreference {
     return Constants.DEFAULT_PADDING_X
   }
 
-  setBookMark(path: string, mark: BookMark): Promise<void> {
+  setBookMark(bookname: string, mark: BookMark): Promise<void> {
     const bookMark: object = this.preference?.getSync('bookMark', null) as object
     if (bookMark) {
-      bookMark[path] = mark
+      bookMark[bookname] = mark
       this.preference?.putSync('bookMark', bookMark)
     } else {
       const newBookMark: Record<string, BookMark> = {}
-      newBookMark[path] = mark
+      newBookMark[bookname] = mark
       this.preference?.putSync('bookMark', newBookMark)
     }
     return this.flush()
   }
 
-  getBookMark(path?: string): BookMark {
+  getBookMark(bookname?: string): BookMark {
     const defaultMark = new BookMark(0, 0)
-    if (!!this.preference && !!path) {
+    if (!!this.preference && !!bookname) {
       const bookMark: object = this.preference.getSync('bookMark', null) as object
       if (bookMark === null) {
         return defaultMark
       }
-      return bookMark[path] ?? defaultMark
+      return bookMark[bookname] ?? defaultMark
     }
     return defaultMark
+  }
+
+  setBookSlice(bookname: string, length: number): Promise<void> {
+    const bookSlice: object = this.preference?.getSync('bookSlice', null) as object
+    if (bookSlice) {
+      bookSlice[bookname] = length
+      this.preference?.putSync('bookSlice', bookSlice)
+    } else {
+      const newBookSlice: Record<string, number> = {}
+      newBookSlice[bookname] = length
+      this.preference?.putSync('bookSlice', newBookSlice)
+    }
+    return this.flush()
+  }
+
+  getBookSlice(bookname: string): number {
+    if (!!this.preference) {
+      const bookSlice: object = this.preference.getSync('bookSlice', null) as object
+      if (bookSlice === null) {
+        return 0
+      }
+      return bookSlice[bookname] ?? 0
+    }
+    return 0
   }
 
   delete(key: string): Promise<void> {
