@@ -1,8 +1,7 @@
 import { router } from '@kit.ArkUI'
 import { SupportSuffix } from '../../common/Constants'
-import { myKVStore } from '../../common/MyKVStore'
 import { myPreference } from '../../common/MyPreference'
-import TextParser, { ParseResult } from '../TextReaderView/TextParser'
+import TextParser from '../TextReaderView/TextParser'
 import getBooks, { BookInfo } from './getBooks'
 import importBook from './importBook'
 
@@ -39,34 +38,8 @@ export default struct ShelfTab {
 
   setTextParseStore(name: string): Promise<void> {
     // todo: setTimeout 验证大文件解析事件长的情况，进入read页面读取数据应该有loading
-    if (!!myKVStore.kvStore) {
-      return this.textParser.parse(`${this.context.filesDir}/${name}`).then((parseValue) => {
-        return this.storeParseData(name, parseValue)
-      })
-    }
-    return Promise.reject()
-  }
-
-  storeParseData(bookname: string, parseData: ParseResult[]): Promise<void> {
-    const dataString = JSON.stringify(parseData)
-    const convRatio = 1000 * 1000 * 4 // 为了容错不使用1024，使用1000，每份value长度最大为4MB
-    const sliceNumber = Math.ceil(dataString.length / convRatio)
-    const sliceArray: Array<string> = []
-    for (let i = 0; i < sliceNumber; i++) {
-      const sliceItem = dataString.slice(i * convRatio, i * convRatio + convRatio)
-      sliceArray.push(sliceItem)
-    }
-
-    return new Promise((resolve, reject) => {
-      const setPreference = myPreference.setBookSlice(bookname, sliceNumber)
-      return Promise.all([
-        setPreference,
-        sliceArray.map((itemStr: string, index: number) => myKVStore.kvStore!.put(`${bookname}_${index}`, itemStr))
-      ]).then(() => {
-        resolve()
-      }).catch(() => {
-        reject()
-      })
+    return this.textParser.parse(`${this.context.filesDir}/${name}`).then((parseValue) => {
+      return this.textParser.storeParseData(name, parseValue)
     })
   }
 
