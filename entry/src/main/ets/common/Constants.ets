@@ -27,4 +27,6 @@ export default class Constants {
   static readonly DEFAULT_FONT_SIZE = 22
   // 默认行高
   static readonly DEFAULT_LINE_HEIGHT_RATIO = 1.6
+  // 页面和手指滚动距离的比值
+  static readonly FLIP_RATIO = 1
 }
