@@ -1,16 +1,6 @@
 import { preferences } from '@kit.ArkData'
 import Constants from './Constants'
 
-class BookMark {
-  public index: number
-  public offset: number
-
-  constructor(index: number, offset: number) {
-    this.index = index
-    this.offset = offset
-  }
-}
-
 class MyPreference {
   private preference: preferences.Preferences | null = null
 
@@ -81,29 +71,28 @@ class MyPreference {
     return Constants.DEFAULT_PADDING_X
   }
 
-  setBookMark(bookname: string, mark: BookMark): Promise<void> {
+  setBookMark(bookname: string, markIndex: number): Promise<void> {
     const bookMark: object = this.preference?.getSync('bookMark', null) as object
     if (bookMark) {
-      bookMark[bookname] = mark
+      bookMark[bookname] = markIndex
       this.preference?.putSync('bookMark', bookMark)
     } else {
-      const newBookMark: Record<string, BookMark> = {}
-      newBookMark[bookname] = mark
+      const newBookMark: Record<string, number> = {}
+      newBookMark[bookname] = markIndex
       this.preference?.putSync('bookMark', newBookMark)
     }
     return this.flush()
   }
 
-  getBookMark(bookname?: string): BookMark {
-    const defaultMark = new BookMark(0, 0)
-    if (!!this.preference && !!bookname) {
+  getBookMark(bookname: string): number {
+    if (!!this.preference) {
       const bookMark: object = this.preference.getSync('bookMark', null) as object
       if (bookMark === null) {
-        return defaultMark
+        return 0
       }
-      return bookMark[bookname] ?? defaultMark
+      return bookMark[bookname] ?? 0
     }
-    return defaultMark
+    return 0
   }
 
   setBookSlice(bookname: string, length: number): Promise<void> {
@@ -148,5 +137,4 @@ class MyPreference {
   }
 }
 
-export { BookMark }
 export const myPreference = new MyPreference()

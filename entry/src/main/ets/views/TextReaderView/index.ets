@@ -3,7 +3,7 @@ import TextLayoutManage, { SpanNode } from './TextLayoutManage'
 import TextSpanNode from './TextSpanNode'
 import { BusinessError } from '@kit.BasicServicesKit'
 import Constants from '../../common/Constants'
-import { BookMark, myPreference } from '../../common/MyPreference'
+import { myPreference } from '../../common/MyPreference'
 import { preferences } from '@kit.ArkData'
 import { myKVStore } from '../../common/MyKVStore'
 
@@ -24,7 +24,7 @@ export default struct TextReaderView {
   private context = getContext()
   private textLayoutManage: TextLayoutManage | null = null
   private scroller: Scroller = new Scroller()
-  private bookMark: BookMark = myPreference.getBookMark()
+  // private bookMark: BookMark = myPreference.getBookMark()
   private dataChangeKeys: Array<string> = ['fontSize', 'lineHeightRatio', 'fontFamilyIndex', 'paddingX']
   private bindObserve: (data: Record<string, preferences.ValueType>) => void = this.observe.bind(this)
   private maxUpDistance: number = 0 // 最大向上滚动距离，用于计算需要增量渲染的高度
@@ -33,7 +33,7 @@ export default struct TextReaderView {
 
   aboutToAppear() {
     this.getBookMark()
-    this.textLayout(this.bookMark.index, this.bookMark.offset)
+    // this.textLayout(this.bookMark.index, this.bookMark.offset)
     this.addReadListener()
   }
 
@@ -50,15 +50,15 @@ export default struct TextReaderView {
   // 设置缓存书签
   setBookMark(): Promise<void> {
     if (!!this.currBookName) {
-      const mark = this.getLinePosition()
-      return myPreference.setBookMark(this.currBookName, mark)
+      // const mark = this.getLinePosition()
+      // return myPreference.setBookMark(this.currBookName, mark)
     }
     return Promise.reject()
   }
 
   // 获取缓存书签
   getBookMark() {
-    this.bookMark = myPreference.getBookMark(this.currBookName)
+    // this.bookMark = myPreference.getBookMark(this.currBookName)
   }
 
   // 设置 textLayoutManage
@@ -144,9 +144,9 @@ export default struct TextReaderView {
       this.paddingX = x
     }
 
-    const bookMark = this.getLinePosition()
+    // const bookMark = this.getLinePosition()
     this.resetLayout()
-    this.textLayout(bookMark.index, bookMark.offset)
+    // this.textLayout(bookMark.index, bookMark.offset)
   }
 
   // 重置布局
@@ -217,32 +217,32 @@ export default struct TextReaderView {
   }
 
   // 获取当前视窗顶部第一行的索引，和相对该行顶部的偏移高度，用于保存书签
-  getLinePosition(): BookMark {
-    if (this.textLayoutManage) {
-      const rect = this.scroller.getItemRect(0)
-      if (rect.height !== 0) {
-        const scrollOffset = -rect.y
-        if (scrollOffset < this.statusBarHeight) {
-          return new BookMark(0, 0)
-        }
-        const layoutNodes = this.textLayoutManage.getNodeRecord()
-        if (layoutNodes.length > 0) {
-          let nodeIndex = 0
-          let nodeHeight = layoutNodes[0].height + this.statusBarHeight
+  // getLinePosition() {
+  //   if (this.textLayoutManage) {
+  //     const rect = this.scroller.getItemRect(0)
+  //     if (rect.height !== 0) {
+  //       const scrollOffset = -rect.y
+  //       if (scrollOffset < this.statusBarHeight) {
+  //         // return new BookMark(0, 0)
+  //       }
+  //       const layoutNodes = this.textLayoutManage.getNodeRecord()
+  //       if (layoutNodes.length > 0) {
+  //         let nodeIndex = 0
+  //         let nodeHeight = layoutNodes[0].height + this.statusBarHeight
+  //
+  //         while (nodeHeight < scrollOffset && nodeIndex < layoutNodes.length - 1) {
+  //           nodeIndex += 1
+  //           nodeHeight += layoutNodes[nodeIndex].height
+  //         }
+  //
+  //         const lineOffset = scrollOffset - (nodeHeight - layoutNodes[nodeIndex].height)
+  //         return new BookMark(layoutNodes[nodeIndex].index, lineOffset < 0 ? 0 : lineOffset)
+  //       }
+  //     }
+  //   }
 
-          while (nodeHeight < scrollOffset && nodeIndex < layoutNodes.length - 1) {
-            nodeIndex += 1
-            nodeHeight += layoutNodes[nodeIndex].height
-          }
-
-          const lineOffset = scrollOffset - (nodeHeight - layoutNodes[nodeIndex].height)
-          return new BookMark(layoutNodes[nodeIndex].index, lineOffset < 0 ? 0 : lineOffset)
-        }
-      }
-    }
-
-    return new BookMark(this.bookMark.index, this.bookMark.offset)
-  }
+    // return new BookMark(this.bookMark.index, this.bookMark.offset)
+  // }
 
   build() {
     Scroll(this.scroller) {

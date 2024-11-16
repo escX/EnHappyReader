@@ -1,9 +1,9 @@
 import Constants from '../common/Constants'
 import { systemBar } from '../common/SystemBar'
-import TextReaderView from '../views/TextReaderView'
 import ReaderBottomBar from '../views/ReaderBottomBar'
 import { font } from '@kit.ArkUI'
 import { myPreference } from '../common/MyPreference'
+import TReaderView from '../views/TReaderView'
 
 @Entry(LocalStorage.getShared())
 @Component
@@ -79,7 +79,7 @@ struct Reader {
 
   build() {
     Column(){
-      TextReaderView({pageState: this.pageState})
+      TReaderView({pageState: this.pageState})
     }
     .width('100%')
     .height('100%')
