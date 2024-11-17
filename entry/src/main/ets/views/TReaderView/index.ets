@@ -3,6 +3,8 @@ import { preferences } from "@kit.ArkData"
 import Constants from "../../common/Constants"
 import TextLayoutManage, { SpanNode } from "./TextLayoutManage"
 import TextParser from "../TextReaderView/TextParser"
+import { common } from "@kit.AbilityKit"
+import { window } from "@kit.ArkUI"
 
 interface TextSpan extends SpanNode {
   pageIndex: number
@@ -15,7 +17,6 @@ export default struct TReaderView {
   @LocalStorageProp('naviBarHeight') naviBarHeight: number = 0
   @LocalStorageProp('screenW') screenW: number = 0
   @LocalStorageProp('screenH') screenH: number = 0
-  @Prop @Watch('onPageStateChange') pageState: boolean | null
   @State spanArray: Array<TextSpan> = [] // 当前渲染的文本节点数据
   @State translateY: number = 0 // 当前页面平移距离
   @State offsetY: number = 0 // 单次手势中滑动的距离
@@ -26,9 +27,11 @@ export default struct TReaderView {
   private textLayoutManage: TextLayoutManage | null = null
   private textParser: TextParser = new TextParser()
   private uiContext: UIContext = this.getUIContext()
-  private context = getContext()
+  private context = getContext() as common.UIAbilityContext
+  private markIndex: number = -1
   private dataChangeKeys: Array<string> = ['fontSize', 'lineHeightRatio', 'fontFamilyIndex', 'paddingX']
-  private bindObserve: (data: Record<string, preferences.ValueType>) => void = this.observe.bind(this)
+  private bindObserveText: (data: Record<string, preferences.ValueType>) => void = this.observeText.bind(this)
+  private bindObserveInactive: (data: window.WindowEventType) => void = this.observeInactive.bind(this)
   private initDistance: number = 0 // 初始也即显示 page0 时的平移距离
   private maxUpDistance: number = 0 // 最大向上滚动距离，始终为0
   private maxDownDistance: number = 0 // 最大向下滚动距离，等于所有页面高度和减去屏幕高度
@@ -36,32 +39,28 @@ export default struct TReaderView {
   private isTextBottom: boolean = false // 单次手势是否滚动到了底部
 
   aboutToAppear() {
-    const markIndex = this.getBookMark()
-    this.setLayout(markIndex)
-    this.addReadListener()
+    this.markIndex = this.getMarkStore()
+    this.setLayout(this.markIndex)
+    this.addTextListener()
+    this.addInactiveListener()
   }
 
   aboutToDisappear() {
-    this.removeReadListener()
-  }
-
-  onPageStateChange() {
-    if (this.pageState === false) {
-      this.setBookMark()
-    }
+    this.setMarkStore()
+    this.removeTextListener()
+    this.removeInactiveListener()
   }
 
   // 设置缓存书签
-  setBookMark(): Promise<void> {
+  setMarkStore(): Promise<void> {
     if (!!this.currBookName) {
-      const mark = this.getMarkIndex()
-      return myPreference.setBookMark(this.currBookName, mark)
+      return myPreference.setBookMark(this.currBookName, this.markIndex)
     }
     return Promise.reject()
   }
 
   // 获取缓存书签
-  getBookMark(): number {
+  getMarkStore(): number {
     if (!!this.currBookName) {
       return myPreference.getBookMark(this.currBookName)
     }
@@ -70,7 +69,16 @@ export default struct TReaderView {
 
   // 获取当前视窗首行索引（书签）
   getMarkIndex(): number {
-    return -1
+    let totalHeight = 0
+    let index = -1
+    for (let i = 0; i < this.spanArray.length; i++) {
+      totalHeight += this.spanArray[i].height
+      if (totalHeight >= -this.translateY) {
+        index = this.spanArray[i].index
+        break
+      }
+    }
+    return index
   }
 
   // 页面布局，在进入页面和修改页面配置时会执行
@@ -153,18 +161,13 @@ export default struct TReaderView {
             this.spanArray = [...page_2, ...page_1, ...page0, ...page1, ...page2]
             this.initDistance = TextLayoutManage.getLinesHeight([...page_2, ...page_1])
             this.translateY = -this.initDistance
+            this.markIndex = this.getMarkIndex()
             const totalTextHeight = TextLayoutManage.getLinesHeight(this.spanArray)
             if (totalTextHeight <= this.screenH) {
               this.maxDownDistance = 0
             } else {
               this.maxDownDistance = totalTextHeight - this.screenH
             }
-
-            console.log('testyy page-2', JSON.stringify(page_2.map(item => item.index)))
-            console.log('testyy page-1', JSON.stringify(page_1.map(item => item.index)))
-            console.log('testyy page00', JSON.stringify(page0.map(item => item.index)))
-            console.log('testyy page+1', JSON.stringify(page1.map(item => item.index)))
-            console.log('testyy page+2', JSON.stringify(page2.map(item => item.index)))
           })
       })
     }
@@ -191,6 +194,7 @@ export default struct TReaderView {
           } as TextSpan))
         ]
         this.translateY = -(-this.translateY - firstPageHeight)
+        this.markIndex = this.getMarkIndex()
         this.initDistance = TextLayoutManage.getLinesHeight(this.spanArray.filter(item => item.pageIndex === -2 || item.pageIndex === -1))
         const totalTextHeight = TextLayoutManage.getLinesHeight(this.spanArray)
         if (totalTextHeight <= this.screenH) {
@@ -198,7 +202,6 @@ export default struct TReaderView {
         } else {
           this.maxDownDistance = totalTextHeight - this.screenH
         }
-        console.log('testyy next', JSON.stringify(this.spanArray.map(item => item.index)))
       })
     }
   }
@@ -224,6 +227,7 @@ export default struct TReaderView {
           } as TextSpan)),
         ]
         this.translateY = -(-this.translateY + firstPageHeight)
+        this.markIndex = this.getMarkIndex()
         this.initDistance = TextLayoutManage.getLinesHeight(this.spanArray.filter(item => item.pageIndex === -2 || item.pageIndex === -1))
         const totalTextHeight = TextLayoutManage.getLinesHeight(this.spanArray)
         if (totalTextHeight <= this.screenH) {
@@ -231,13 +235,29 @@ export default struct TReaderView {
         } else {
           this.maxDownDistance = totalTextHeight - this.screenH
         }
-        console.log('testyy prev', JSON.stringify(this.spanArray.map(item => item.index)))
       })
     }
   }
 
+  // 监听页面失焦后，保存书签
+  observeInactive(data: window.WindowEventType) {
+    if (data == window.WindowEventType.WINDOW_INACTIVE) {
+      this.setMarkStore()
+    }
+  }
+
+  // 添加监听
+  addInactiveListener() {
+    this.context.windowStage.getMainWindowSync().on("windowEvent", this.bindObserveInactive)
+  }
+
+  // 移除监听
+  removeInactiveListener() {
+    this.context.windowStage.getMainWindowSync().off("windowEvent", this.bindObserveInactive)
+  }
+
   // 监听阅读设置改变，重新布局
-  observe(data: Record<string, preferences.ValueType>) {
+  observeText(data: Record<string, preferences.ValueType>) {
     if (data.fontSize !== undefined) {
       this.fontSize = data.fontSize as number
       this.lineHeight = (data.fontSize as number) * (myPreference.getLineHeightRatio() as number)
@@ -258,18 +278,17 @@ export default struct TReaderView {
       this.paddingX = x
     }
 
-    const markIndex = this.getMarkIndex()
-    this.setLayout(markIndex)
+    this.setLayout(this.markIndex)
   }
 
   // 添加监听
-  addReadListener() {
-    myPreference.onDataChange(this.dataChangeKeys, this.bindObserve)
+  addTextListener() {
+    myPreference.onDataChange(this.dataChangeKeys, this.bindObserveText)
   }
 
   // 移除监听
-  removeReadListener() {
-    myPreference.offDataChange(this.dataChangeKeys, this.bindObserve)
+  removeTextListener() {
+    myPreference.offDataChange(this.dataChangeKeys, this.bindObserveText)
   }
 
   build() {
@@ -327,9 +346,10 @@ export default struct TReaderView {
 
           if (-this.translateY - this.initDistance >= this.screenH) {
             this.getNextPage()
-          }
-          if (this.initDistance - (-this.translateY) >= this.screenH) {
+          } else if (this.initDistance - (-this.translateY) >= this.screenH) {
             this.getPrevPage()
+          } else {
+            this.markIndex = this.getMarkIndex()
           }
         })
     )

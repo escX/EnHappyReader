@@ -9,7 +9,6 @@ import TReaderView from '../views/TReaderView'
 @Component
 struct Reader {
   @State bgColorIndex: number = myPreference.getBgColorIndex()
-  @State pageState: boolean | null = null
 
   private bottomBarController: CustomDialogController = new CustomDialogController({
     builder: ReaderBottomBar(),
@@ -51,14 +50,12 @@ struct Reader {
   }
 
   onPageShow() {
-    this.pageState = true
     systemBar.setFullScreen(true)
     systemBar.displayStatusBar(false)
     systemBar.mainWindow?.setWindowKeepScreenOn(true)
   }
 
   onPageHide() {
-    this.pageState = false
     systemBar.setFullScreen(false)
     systemBar.displayStatusBar(true, 'transparent')
     systemBar.mainWindow?.setWindowKeepScreenOn(false)
@@ -79,7 +76,7 @@ struct Reader {
 
   build() {
     Column(){
-      TReaderView({pageState: this.pageState})
+      TReaderView()
     }
     .width('100%')
     .height('100%')
