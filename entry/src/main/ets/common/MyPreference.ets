@@ -88,11 +88,11 @@ class MyPreference {
     if (!!this.preference) {
       const bookMark: object = this.preference.getSync('bookMark', null) as object
       if (bookMark === null) {
-        return 0
+        return -1
       }
-      return bookMark[bookname] ?? 0
+      return bookMark[bookname] ?? -1
     }
-    return 0
+    return -1
   }
 
   setBookSlice(bookname: string, length: number): Promise<void> {

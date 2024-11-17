@@ -12,6 +12,8 @@ interface TextLayoutParams {
   filePath: string
   pageHeight: number
   linesLocation: Array<LineLocation>
+  topSpace: number
+  bottomSpace: number
   lineWidth: number
   fontSize: number
   lineHeight: number
@@ -23,6 +25,9 @@ class TextLayoutManage {
   private filePath: string
   private pageHeight: number
   private linesLocation: Array<LineLocation>
+  private rowHeight: number
+  private topSpaceRows: number
+  private bottomSpaceRows: number
   private lineWidth: number
   private fontSize: number
   private lineHeight: number
@@ -37,6 +42,10 @@ class TextLayoutManage {
     this.fontSize = params.fontSize
     this.lineHeight = params.lineHeight
     this.fontFamily = params.fontFamily
+
+    this.rowHeight = this.getLineHeight('\r\n')
+    this.topSpaceRows = Math.ceil(params.topSpace / this.rowHeight)
+    this.bottomSpaceRows = Math.ceil(params.bottomSpace / this.rowHeight)
   }
 
   private getLineText(byteStart: number, byteLen: number): Promise<string> {
@@ -60,8 +69,28 @@ class TextLayoutManage {
   }
 
   private backwardLinesLoop(index: number, totalHeight: number, linesData: Array<SpanNode>): Promise<Array<SpanNode>> {
-    if (totalHeight >= this.pageHeight || index >= this.linesLocation.length) {
+    if (totalHeight >= this.pageHeight || index > this.linesLocation.length) {
       return Promise.resolve(linesData)
+    }
+
+    // 模拟顶部空行
+    if (index === -1) {
+      const topSpaceHeight = this.topSpaceRows * this.rowHeight
+      return this.backwardLinesLoop(
+        index + 1,
+        totalHeight + topSpaceHeight,
+        [...linesData, { content: Array(this.bottomSpaceRows).fill('\r\n').join(''), index, height: topSpaceHeight }]
+      )
+    }
+
+    // 模拟底部空行
+    if (index === this.linesLocation.length) {
+      const bottomSpaceHeight = this.bottomSpaceRows * this.rowHeight
+      return this.backwardLinesLoop(
+        index + 1,
+        totalHeight + bottomSpaceHeight,
+        [...linesData, { content: Array(this.bottomSpaceRows).fill('\r\n').join(''), index, height: bottomSpaceHeight }]
+      )
     }
 
     const thisLine = this.linesLocation[index]
@@ -81,8 +110,28 @@ class TextLayoutManage {
   }
 
   private forwardLinesLoop(index: number, totalHeight: number, linesData: Array<SpanNode>): Promise<Array<SpanNode>> {
-    if (totalHeight >= this.pageHeight || index < 0) {
+    if (totalHeight >= this.pageHeight || index < -1) {
       return Promise.resolve(linesData)
+    }
+
+    // 模拟顶部空行
+    if (index === -1) {
+      const topSpaceHeight = this.topSpaceRows * this.rowHeight
+      return this.forwardLinesLoop(
+        index - 1,
+        totalHeight + topSpaceHeight,
+        [{ content: Array(this.topSpaceRows).fill('\r\n').join(''), index: -1, height: topSpaceHeight }, ...linesData]
+      )
+    }
+
+    // 模拟底部空行
+    if (index === this.linesLocation.length) {
+      const bottomSpaceHeight = this.bottomSpaceRows * this.rowHeight
+      return this.forwardLinesLoop(
+        index - 1,
+        totalHeight + bottomSpaceHeight,
+        [{ content: Array(this.topSpaceRows).fill('\r\n').join(''), index: -1, height: bottomSpaceHeight }, ...linesData]
+      )
     }
 
     const thisLine = this.linesLocation[index]

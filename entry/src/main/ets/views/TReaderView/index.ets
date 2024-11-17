@@ -65,12 +65,12 @@ export default struct TReaderView {
     if (!!this.currBookName) {
       return myPreference.getBookMark(this.currBookName)
     }
-    return 0
+    return -1
   }
 
   // 获取当前视窗首行索引（书签）
   getMarkIndex(): number {
-    return 0
+    return -1
   }
 
   // 页面布局，在进入页面和修改页面配置时会执行
@@ -82,6 +82,8 @@ export default struct TReaderView {
           filePath: `${this.context.filesDir}/${this.currBookName}`,
           pageHeight: this.screenH,
           linesLocation,
+          topSpace: this.statusBarHeight,
+          bottomSpace: this.statusBarHeight,
           lineWidth: this.screenW - this.paddingX * 2,
           fontSize: this.fontSize,
           lineHeight: this.lineHeight,
