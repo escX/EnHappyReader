@@ -3,7 +3,7 @@ import { systemBar } from '../common/SystemBar'
 import ReaderBottomBar from '../views/ReaderBottomBar'
 import { font } from '@kit.ArkUI'
 import { myPreference } from '../common/MyPreference'
-import TReaderView from '../views/TReaderView'
+import TextReaderView from '../views/TextReaderView'
 
 @Entry(LocalStorage.getShared())
 @Component
@@ -76,7 +76,7 @@ struct Reader {
 
   build() {
     Column(){
-      TReaderView()
+      TextReaderView()
     }
     .width('100%')
     .height('100%')

@@ -1,129 +1,273 @@
-import { LineLocation, ParseResult } from './TextParser'
-import TextLayoutManage, { SpanNode } from './TextLayoutManage'
-import TextSpanNode from './TextSpanNode'
-import { BusinessError } from '@kit.BasicServicesKit'
-import Constants from '../../common/Constants'
-import { myPreference } from '../../common/MyPreference'
-import { preferences } from '@kit.ArkData'
-import { myKVStore } from '../../common/MyKVStore'
+import { myPreference } from "../../common/MyPreference"
+import { preferences } from "@kit.ArkData"
+import Constants from "../../common/Constants"
+import TextLayoutManage, { SpanNode } from "./TextLayoutManage"
+import TextParser from "./TextParser"
+import { common } from "@kit.AbilityKit"
+import { window } from "@kit.ArkUI"
+
+interface TextSpan extends SpanNode {
+  pageIndex: number
+}
 
 @Component
-export default struct TextReaderView {
+export default struct TReaderView {
   @LocalStorageProp('currBookName') currBookName: string | undefined = undefined
   @LocalStorageProp('statusBarHeight') statusBarHeight: number = 0
   @LocalStorageProp('naviBarHeight') naviBarHeight: number = 0
   @LocalStorageProp('screenW') screenW: number = 0
   @LocalStorageProp('screenH') screenH: number = 0
-  @Prop @Watch('onPageStateChange') pageState: boolean | null
-  @State textSpanArray: Array<SpanNode> = []
+  @State spanArray: Array<TextSpan> = [] // 当前渲染的文本节点数据
+  @State translateY: number = 0 // 当前页面平移距离
+  @State offsetY: number = 0 // 单次手势中滑动的距离
   @State fontSize: number = myPreference.getFontSize()
   @State lineHeight: number = myPreference.getLineHeightRatio() * this.fontSize
   @State fontFamily: string = Constants.FONT_FAMILY_ARRAY[myPreference.getFontFamilyIndex()]
   @State paddingX: number = myPreference.getPaddingX()
-  private uiContext: UIContext = this.getUIContext()
-  private context = getContext()
   private textLayoutManage: TextLayoutManage | null = null
-  private scroller: Scroller = new Scroller()
-  // private bookMark: BookMark = myPreference.getBookMark()
+  private textParser: TextParser = new TextParser()
+  private uiContext: UIContext = this.getUIContext()
+  private context = getContext() as common.UIAbilityContext
+  private markIndex: number = -1
   private dataChangeKeys: Array<string> = ['fontSize', 'lineHeightRatio', 'fontFamilyIndex', 'paddingX']
-  private bindObserve: (data: Record<string, preferences.ValueType>) => void = this.observe.bind(this)
-  private maxUpDistance: number = 0 // 最大向上滚动距离，用于计算需要增量渲染的高度
-  private maxDownDistance: number = 0 // 最大向下滚动距离，用于计算需要增量渲染的高度
-  private totalOffset: number = 0 // 相对初始位置的滚动距离，用于计算需要增量渲染的高度
+  private bindObserveText: (data: Record<string, preferences.ValueType>) => void = this.observeText.bind(this)
+  private bindObserveInactive: (data: window.WindowEventType) => void = this.observeInactive.bind(this)
+  private initDistance: number = 0 // 初始也即显示 page0 时的平移距离
+  private maxUpDistance: number = 0 // 最大向上滚动距离，始终为0
+  private maxDownDistance: number = 0 // 最大向下滚动距离，等于所有页面高度和减去屏幕高度
+  private isTextTop: boolean = false // 单次手势是否滚动到了顶部
+  private isTextBottom: boolean = false // 单次手势是否滚动到了底部
 
   aboutToAppear() {
-    this.getBookMark()
-    // this.textLayout(this.bookMark.index, this.bookMark.offset)
-    this.addReadListener()
+    this.markIndex = this.getMarkStore()
+    this.setLayout(this.markIndex)
+    this.addTextListener()
+    this.addInactiveListener()
   }
 
   aboutToDisappear() {
-    this.removeReadListener()
-  }
-
-  onPageStateChange() {
-    if (this.pageState === false) {
-      this.setBookMark()
-    }
+    this.setMarkStore()
+    this.removeTextListener()
+    this.removeInactiveListener()
   }
 
   // 设置缓存书签
-  setBookMark(): Promise<void> {
+  setMarkStore(): Promise<void> {
     if (!!this.currBookName) {
-      // const mark = this.getLinePosition()
-      // return myPreference.setBookMark(this.currBookName, mark)
+      return myPreference.setBookMark(this.currBookName, this.markIndex)
     }
     return Promise.reject()
   }
 
   // 获取缓存书签
-  getBookMark() {
-    // this.bookMark = myPreference.getBookMark(this.currBookName)
+  getMarkStore(): number {
+    if (!!this.currBookName) {
+      return myPreference.getBookMark(this.currBookName)
+    }
+    return -1
   }
 
-  // 设置 textLayoutManage
-  setLayoutManage(linesLocation: ParseResult[], startLineIndex: number) {
+  // 获取当前视窗首行索引（书签）
+  getMarkIndex(): number {
+    if (this.translateY === 0) {
+      return -1
+    }
+
+    let totalHeight = 0
+    let index = -1
+    for (let i = 0; i < this.spanArray.length; i++) {
+      totalHeight += this.spanArray[i].height
+      const spanIndex = this.spanArray[i].index
+      if (totalHeight === -this.translateY) {
+        index = spanIndex + 1
+        break
+      }
+      if (totalHeight > -this.translateY) {
+        index = spanIndex
+        break
+      }
+    }
+
+    return index
+  }
+
+  // 页面布局，在进入页面和修改页面配置时会执行
+  setLayout(startIndex: number) {
     if (!!this.currBookName) {
-      this.textLayoutManage = new TextLayoutManage({
-        uiContext: this.uiContext,
-        filePath: `${this.context.filesDir}/${this.currBookName}`,
-        startLineIndex,
-        preRenderPage: 2,
-        pageHeight: this.screenH,
-        linesLocation,
-        textStyle: {
+      this.textParser.takeParseData(this.currBookName).then((linesLocation) => {
+        this.textLayoutManage = new TextLayoutManage({
+          uiContext: this.uiContext,
+          filePath: `${this.context.filesDir}/${this.currBookName}`,
+          pageHeight: this.screenH,
+          linesLocation,
+          topSpace: this.statusBarHeight,
+          bottomSpace: this.statusBarHeight,
           lineWidth: this.screenW - this.paddingX * 2,
           fontSize: this.fontSize,
           lineHeight: this.lineHeight,
           fontFamily: this.fontFamily,
-        }
-      })
-    }
-  }
+        })
 
-  // 渲染自定义节点
-  buildNode(startLineIndex: number, startLineOffset: number) {
-    this.renderNextLines(startLineOffset)
-      .then(() => {
-        return this.renderPrevLines(0) // 必须保证 PrevLines 最后渲染，否则 scrollBy 可能不会作用
-      })
-      .then((prependHeight) => {
-        // 定位初始位置，如果不是首次进入，需要额外滚动 statusBarHeight 的高度
-        if (!(startLineIndex === 0 && startLineOffset === 0)) {
-          this.scroller.scrollBy(0, prependHeight + this.statusBarHeight + startLineOffset)
-        }
-      })
-  }
+        let page_2: TextSpan[] = [] // -2 page
+        let page_1: TextSpan[] = [] // -1 page
+        let page0: TextSpan[] = []  // 当前页
+        let page1: TextSpan[] = []  // +1 page
+        let page2: TextSpan[] = []  // +2 page
 
-  // 页面布局
-  textLayout(startLineIndex: number, startLineOffset: number) {
-    if (!!this.currBookName && myKVStore.kvStore) {
-      // 拼接解析后的数据
-      const bookSliceNumber: number = myPreference.getBookSlice(this.currBookName)
-      const getSliceStrAsync: Array<Promise<string>> = []
-      for (let i = 0; i < bookSliceNumber; i++) {
-        getSliceStrAsync.push(myKVStore.kvStore.get(`${this.currBookName}_${i}`) as Promise<string>)
-      }
-      Promise.all(getSliceStrAsync).then((value) => {
-        const parseStr = value.join('')
-        try {
-          const parseData: Array<ParseResult> = JSON.parse(parseStr)
-          const linesLocation: LineLocation[] = parseData.map(item => {
-            const lineLocation: LineLocation = {
-              byteStart: item.byteStart,
-              byteLen: item.byteLen
-            }
-            return lineLocation
+        this.textLayoutManage.getPageLinesStartAt(startIndex) // 0 page 当前页
+          .then((data) => {
+            page0 = data.map(item => ({
+              index: item.index,
+              content: item.content,
+              height: item.height,
+              pageIndex: 0,
+            } as TextSpan))
+
+            const firstSpan = page0[0]
+            const lastSpan = page0[page0.length - 1]
+            return Promise.all([
+              this.textLayoutManage!.getPageLinesStartAt(!!lastSpan ? lastSpan.index + 1 : undefined), // +1 page
+              this.textLayoutManage!.getPageLinesEndAt(!!firstSpan ? firstSpan.index - 1 : undefined)  // -1 page
+            ])
           })
-          this.setLayoutManage(linesLocation, startLineIndex)
-          this.buildNode(startLineIndex, startLineOffset)
-        } catch(error) {}
+          .then((data) => {
+            page1 = data[0].map(item => ({
+              index: item.index,
+              content: item.content,
+              height: item.height,
+              pageIndex: 1,
+            } as TextSpan))
+
+            page_1 = data[1].map(item => ({
+              index: item.index,
+              content: item.content,
+              height: item.height,
+              pageIndex: -1,
+            } as TextSpan))
+
+            const firstSpan = page_1[0]
+            const lastSpan = page1[page1.length - 1]
+
+            return Promise.all([
+              this.textLayoutManage!.getPageLinesStartAt(!!lastSpan ? lastSpan.index + 1 : undefined), // +2 page
+              this.textLayoutManage!.getPageLinesEndAt(!!firstSpan ? firstSpan.index - 1 : undefined)  // -2 page
+            ])
+          })
+          .then((data) => {
+            page2 = data[0].map(item => ({
+              index: item.index,
+              content: item.content,
+              height: item.height,
+              pageIndex: 2,
+            } as TextSpan))
+
+            page_2 = data[1].map(item => ({
+              index: item.index,
+              content: item.content,
+              height: item.height,
+              pageIndex: -2,
+            } as TextSpan))
+
+            this.spanArray = [...page_2, ...page_1, ...page0, ...page1, ...page2]
+            this.initDistance = TextLayoutManage.getLinesHeight([...page_2, ...page_1])
+            this.translateY = -this.initDistance
+            this.markIndex = this.getMarkIndex()
+            const totalTextHeight = TextLayoutManage.getLinesHeight(this.spanArray)
+            if (totalTextHeight <= this.screenH) {
+              this.maxDownDistance = 0
+            } else {
+              this.maxDownDistance = totalTextHeight - this.screenH
+            }
+          })
       })
     }
+  }
+
+  // 获取并添加下一页文本，移除之前第一页文本
+  getNextPage() {
+    const lastSpan = this.spanArray[this.spanArray.length - 1]
+    if (!!lastSpan && !!this.textLayoutManage) {
+      this.textLayoutManage.getPageLinesStartAt(lastSpan.index + 1).then(data => {
+        const firstPageHeight = TextLayoutManage.getLinesHeight(this.spanArray.filter(item => item.pageIndex === -2))
+        this.spanArray = [
+          ...this.spanArray.filter(item => item.pageIndex !== -2).map(item => ({
+            index: item.index,
+            height: item.height,
+            content: item.content,
+            pageIndex: item.pageIndex - 1
+          } as TextSpan)),
+          ...data.map(item => ({
+            index: item.index,
+            height: item.height,
+            content: item.content,
+            pageIndex: 2
+          } as TextSpan))
+        ]
+        this.translateY = -(-this.translateY - firstPageHeight)
+        this.markIndex = this.getMarkIndex()
+        this.initDistance = TextLayoutManage.getLinesHeight(this.spanArray.filter(item => item.pageIndex === -2 || item.pageIndex === -1))
+        const totalTextHeight = TextLayoutManage.getLinesHeight(this.spanArray)
+        if (totalTextHeight <= this.screenH) {
+          this.maxDownDistance = 0
+        } else {
+          this.maxDownDistance = totalTextHeight - this.screenH
+        }
+      })
+    }
+  }
+
+  // 获取并添加上一页文本，移除之前最后一页文本
+  getPrevPage() {
+    const firstSpan = this.spanArray[0]
+    if (!!firstSpan && !!this.textLayoutManage) {
+      this.textLayoutManage.getPageLinesEndAt(firstSpan.index - 1).then(data => {
+        const firstPageHeight = TextLayoutManage.getLinesHeight(data)
+        this.spanArray = [
+          ...data.map(item => ({
+            index: item.index,
+            height: item.height,
+            content: item.content,
+            pageIndex: -2
+          } as TextSpan)),
+          ...this.spanArray.filter(item => item.pageIndex !== 2).map(item => ({
+            index: item.index,
+            height: item.height,
+            content: item.content,
+            pageIndex: item.pageIndex + 1
+          } as TextSpan)),
+        ]
+        this.translateY = -(-this.translateY + firstPageHeight)
+        this.markIndex = this.getMarkIndex()
+        this.initDistance = TextLayoutManage.getLinesHeight(this.spanArray.filter(item => item.pageIndex === -2 || item.pageIndex === -1))
+        const totalTextHeight = TextLayoutManage.getLinesHeight(this.spanArray)
+        if (totalTextHeight <= this.screenH) {
+          this.maxDownDistance = 0
+        } else {
+          this.maxDownDistance = totalTextHeight - this.screenH
+        }
+      })
+    }
+  }
+
+  // 监听页面失焦后，保存书签
+  observeInactive(data: window.WindowEventType) {
+    if (data == window.WindowEventType.WINDOW_INACTIVE) {
+      this.setMarkStore()
+    }
+  }
+
+  // 添加监听
+  addInactiveListener() {
+    this.context.windowStage.getMainWindowSync().on("windowEvent", this.bindObserveInactive)
+  }
+
+  // 移除监听
+  removeInactiveListener() {
+    this.context.windowStage.getMainWindowSync().off("windowEvent", this.bindObserveInactive)
   }
 
   // 监听阅读设置改变，重新布局
-  observe(data: Record<string, preferences.ValueType>) {
+  observeText(data: Record<string, preferences.ValueType>) {
     if (data.fontSize !== undefined) {
       this.fontSize = data.fontSize as number
       this.lineHeight = (data.fontSize as number) * (myPreference.getLineHeightRatio() as number)
@@ -144,141 +288,99 @@ export default struct TextReaderView {
       this.paddingX = x
     }
 
-    // const bookMark = this.getLinePosition()
-    this.resetLayout()
-    // this.textLayout(bookMark.index, bookMark.offset)
-  }
-
-  // 重置布局
-  resetLayout() {
-    this.scroller.scrollTo({ xOffset: 0, yOffset: 0 })
-    this.textSpanArray = []
-    this.totalOffset = 0
-    this.maxDownDistance = 0
-    this.maxUpDistance = 0
+    this.setLayout(this.markIndex)
   }
 
   // 添加监听
-  addReadListener() {
-    myPreference.onDataChange(this.dataChangeKeys, this.bindObserve)
+  addTextListener() {
+    myPreference.onDataChange(this.dataChangeKeys, this.bindObserveText)
   }
 
   // 移除监听
-  removeReadListener() {
-    myPreference.offDataChange(this.dataChangeKeys, this.bindObserve)
+  removeTextListener() {
+    myPreference.offDataChange(this.dataChangeKeys, this.bindObserveText)
   }
-
-  // 渲染下方的增量 Span，返回渲染的高度
-  renderNextLines(downDistance: number): Promise<number> {
-    return new Promise((resolve, reject) => {
-      this.textLayoutManage?.getNextLines(downDistance)
-        .then((data) => {
-          let appendHeight = 0
-          if (data.length > 0) {
-            this.textSpanArray.push(...data)
-            this.maxDownDistance = downDistance
-            appendHeight = this.textLayoutManage?.getIncrementNextHeight() ?? 0
-          }
-          resolve(appendHeight)
-        })
-        .catch((err: BusinessError) => {
-          reject(err)
-        })
-    })
-  }
-
-  // 渲染上方的增量 Span，返回渲染的高度
-  renderPrevLines(upDistance: number): Promise<number> {
-    return new Promise((resolve, reject) => {
-      this.textLayoutManage?.getPrevLines(upDistance)
-        .then((data) => {
-          let prependHeight = 0
-          if (data.length > 0) {
-            this.textSpanArray.unshift(...data)
-            this.maxUpDistance = upDistance
-            prependHeight = this.textLayoutManage?.getIncrementPrevHeight() ?? 0
-          }
-          resolve(prependHeight)
-        })
-        .catch((err: BusinessError) => {
-          reject(err)
-        })
-    })
-  }
-
-  // 进行计算增量渲染的条件：当前滚动距离，超出之前最大滚动距离，半个以上屏幕
-  needLayoutPrev() {
-    return -this.totalOffset - this.maxUpDistance > this.screenH / 2
-  }
-
-  // 进行计算增量渲染的条件：当前滚动距离，超出之前最大滚动距离，半个以上屏幕
-  needLayoutNext() {
-    return this.totalOffset - this.maxDownDistance > this.screenH / 2
-  }
-
-  // 获取当前视窗顶部第一行的索引，和相对该行顶部的偏移高度，用于保存书签
-  // getLinePosition() {
-  //   if (this.textLayoutManage) {
-  //     const rect = this.scroller.getItemRect(0)
-  //     if (rect.height !== 0) {
-  //       const scrollOffset = -rect.y
-  //       if (scrollOffset < this.statusBarHeight) {
-  //         // return new BookMark(0, 0)
-  //       }
-  //       const layoutNodes = this.textLayoutManage.getNodeRecord()
-  //       if (layoutNodes.length > 0) {
-  //         let nodeIndex = 0
-  //         let nodeHeight = layoutNodes[0].height + this.statusBarHeight
-  //
-  //         while (nodeHeight < scrollOffset && nodeIndex < layoutNodes.length - 1) {
-  //           nodeIndex += 1
-  //           nodeHeight += layoutNodes[nodeIndex].height
-  //         }
-  //
-  //         const lineOffset = scrollOffset - (nodeHeight - layoutNodes[nodeIndex].height)
-  //         return new BookMark(layoutNodes[nodeIndex].index, lineOffset < 0 ? 0 : lineOffset)
-  //       }
-  //     }
-  //   }
-
-    // return new BookMark(this.bookMark.index, this.bookMark.offset)
-  // }
 
   build() {
-    Scroll(this.scroller) {
-      TextSpanNode({
-        textSpanArray: this.textSpanArray,
-        paddingTop: this.statusBarHeight,
-        paddingBottom: this.naviBarHeight,
-        paddingX: this.paddingX,
-        fontSize: this.fontSize,
-        lineHeight: this.lineHeight,
-        fontFamily: this.fontFamily
-      })
+    Text(){
+      ForEach(
+        this.spanArray,
+        (obj: TextSpan) => Span(obj.content),
+        (obj: TextSpan) => obj.index.toString()
+      )
     }
-    .height('100%')
     .width('100%')
-    .align(Alignment.TopStart) // 子元素在顶部对齐
-    .scrollBar(BarState.Off) // 不显示滚动条
-    .edgeEffect(EdgeEffect.Fade) // 滚动到底后显示半弧形阴影
-    .friction(1) // 弹性滚动摩擦系数
-    .onWillScroll((xOffset: number, yOffset: number, scrollState: ScrollState, scrollSource: ScrollSource) => {
-      if (scrollState === ScrollState.Idle && scrollSource === ScrollSource.SCROLLER) {
-        this.totalOffset -= yOffset // 减去 scrollBy 的距离
+    .padding({left: this.paddingX, right: this.paddingX})
+    .fontSize(this.fontSize)
+    .lineHeight(this.lineHeight)
+    .fontFamily(this.fontFamily)
+    .copyOption(CopyOptions.InApp)
+    .editMenuOptions({
+      onCreateMenu: (menuItems: Array<TextMenuItem>) => {
+        return [
+          {id: TextMenuItemId.COPY, content: '复制'},
+          {id: TextMenuItemId.of('translate'), content: '翻译'},
+          {id: TextMenuItemId.of('star'), content: '收藏'},
+          {id: TextMenuItemId.of('share'), content: '分享'},
+        ]
+      },
+      onMenuItemClick: (menuItem: TextMenuItem, textRange: TextRange) => {
+        // todo: 翻译、收藏、分享
+        if (menuItem.id.equals(TextMenuItemId.of('translate'))) {
+          return true
+        }
+
+        if (menuItem.id.equals(TextMenuItemId.of('star'))) {
+          return true
+        }
+
+        if (menuItem.id.equals(TextMenuItemId.of('share'))) {
+          return true
+        }
+
+        return false
       }
     })
-    .onDidScroll((xOffset: number, yOffset: number) => {
-      this.totalOffset += yOffset
-    })
-    .onScrollStop(() => {
-      if (this.totalOffset > 0 && this.needLayoutNext()) {
-        this.renderNextLines(this.totalOffset)
-      }
-      if (this.totalOffset < 0 && this.needLayoutPrev()) {
-        this.renderPrevLines(-this.totalOffset).then((prependHeight) => {
-          this.scroller.scrollBy(0, prependHeight) // 滚动容器内容上方增加了高度，需要 ScrollBy 向下滑动这个距离
+    .translate({ x: 0, y: this.translateY + this.offsetY, z: 0 })
+    .gesture(
+      PanGesture()
+        .onActionUpdate((event?: GestureEvent) => {
+          if (!event || this.isTextTop || this.isTextBottom) {
+            return
+          }
+
+          let offsetY = event.offsetY * Constants.FLIP_RATIO
+          const translateY = this.translateY + offsetY
+
+          if (translateY > 0 && translateY >= this.maxUpDistance) {
+            offsetY = this.maxUpDistance - this.translateY
+            this.isTextTop = true
+          } else if (translateY <= 0 && -translateY >= this.maxDownDistance) {
+            offsetY = -this.maxDownDistance - this.translateY
+            this.isTextBottom = true
+          }
+
+          animateTo({
+            duration: 300,
+            curve: Curve.EaseOut
+          }, () => {
+            this.offsetY = offsetY
+          })
         })
-      }
-    })
+        .onActionEnd(() => {
+          this.translateY += this.offsetY
+          this.offsetY = 0
+          this.isTextTop = false
+          this.isTextBottom = false
+
+          if (-this.translateY - this.initDistance >= this.screenH) {
+            this.getNextPage()
+          } else if (this.initDistance - (-this.translateY) >= this.screenH) {
+            this.getPrevPage()
+          } else {
+            this.markIndex = this.getMarkIndex()
+          }
+        })
+    )
   }
 }
