@@ -1,15 +1,20 @@
 import Constants from '../common/Constants'
-import { systemBar } from '../common/SystemBar'
+import SystemBar from '../common/SystemBar'
 import ReaderBottomBar from '../views/ReaderBottomBar'
 import { font } from '@kit.ArkUI'
 import { myPreference } from '../common/MyPreference'
 import TextReaderView from '../views/TextReaderView'
+import { common } from '@kit.AbilityKit'
+import { preferences } from '@kit.ArkData'
 
 @Entry(LocalStorage.getShared())
 @Component
 struct Reader {
   @State bgColorIndex: number = myPreference.getBgColorIndex()
-
+  private context = getContext() as common.UIAbilityContext
+  private systemBar = new SystemBar(this.context)
+  private bgColorKey = ['bgColorIndex']
+  private bindObserveBgColor: (data: Record<string, preferences.ValueType>) => void = this.observeBgColor.bind(this)
   private bottomBarController: CustomDialogController = new CustomDialogController({
     builder: ReaderBottomBar(),
     isModal: false,
@@ -22,15 +27,10 @@ struct Reader {
       topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0
     },
     cancel: () => {
-      systemBar.displayStatusBar(false)
-      this.closeBottomBar()
+      this.systemBar.displayStatusBar(false)
+      this.bottomBarController.close()
     }
   })
-
-  aboutToAppear() {
-    this.registerFont()
-    this.watchStyle()
-  }
 
   registerFont() {
     Constants.FONT_FAMILY_ARRAY.forEach(item => {
@@ -41,37 +41,37 @@ struct Reader {
     })
   }
 
-  watchStyle() {
-    myPreference.onDataChange(['bgColorIndex'], (data) => {
-      if (data.bgColorIndex !== undefined) {
-        this.bgColorIndex = data.bgColorIndex as number
-      }
-    })
+  // 添加监听
+  addTextListener() {
+    myPreference.onDataChange(this.bgColorKey, this.bindObserveBgColor)
+  }
+
+  // 移除监听
+  removeTextListener() {
+    myPreference.offDataChange(this.bgColorKey, this.bindObserveBgColor)
+  }
+
+  observeBgColor(data: Record<string, preferences.ValueType>) {
+    if (data.bgColorIndex !== undefined) {
+      this.bgColorIndex = data.bgColorIndex as number
+      this.systemBar.displayStatusBar(true, Constants.FILL_COLOR_ARRAY[this.bgColorIndex])
+    }
   }
 
   onPageShow() {
-    systemBar.setFullScreen(true)
-    systemBar.displayStatusBar(false)
-    systemBar.mainWindow?.setWindowKeepScreenOn(true)
+    this.addTextListener()
+    this.registerFont()
+    this.systemBar.setFullScreen(true)
+    this.systemBar.displayStatusBar(false)
+    this.systemBar.mainWindow.setWindowKeepScreenOn(true)
   }
 
   onPageHide() {
-    systemBar.setFullScreen(false)
-    systemBar.displayStatusBar(true, 'transparent')
-    systemBar.mainWindow?.setWindowKeepScreenOn(false)
-    this.closeBottomBar()
-  }
-
-  openBottomBar() {
-    systemBar.enableNaviBar(false)
-    setTimeout(() => {
-      this.bottomBarController.open() // 等 enableNaviBar 结束后再打开
-    }, 100)
-  }
-
-  closeBottomBar() {
-    systemBar.enableNaviBar(true)
+    this.removeTextListener()
     this.bottomBarController.close()
+    this.systemBar.setFullScreen(false)
+    this.systemBar.displayStatusBar(true)
+    this.systemBar.mainWindow.setWindowKeepScreenOn(false)
   }
 
   build() {
@@ -85,28 +85,28 @@ struct Reader {
       // todo: 自定义菜单：操作按钮，页面信息，配置
       GestureGroup(GestureMode.Exclusive,
         PinchGesture().onActionStart(() => {
-          systemBar.displayStatusBar(true, 'white')
-          this.openBottomBar()
+          this.systemBar.displayStatusBar(true, Constants.FILL_COLOR_ARRAY[this.bgColorIndex])
+          this.bottomBarController.open()
         }),
         LongPressGesture().onAction(() => {
-          systemBar.displayStatusBar(false)
-          this.closeBottomBar()
+          this.systemBar.displayStatusBar(false)
+          this.bottomBarController.close()
         }),
         PanGesture().onActionStart(() => {
-          systemBar.displayStatusBar(false)
-          this.closeBottomBar()
+          this.systemBar.displayStatusBar(false)
+          this.bottomBarController.close()
         }),
         RotationGesture().onActionStart(() => {
-          systemBar.displayStatusBar(false)
-          this.closeBottomBar()
+          this.systemBar.displayStatusBar(false)
+          this.bottomBarController.close()
         }),
         SwipeGesture().onAction(() => {
-          systemBar.displayStatusBar(false)
-          this.closeBottomBar()
+          this.systemBar.displayStatusBar(false)
+          this.bottomBarController.close()
         }),
         TapGesture().onAction(() => {
-          systemBar.displayStatusBar(false)
-          this.closeBottomBar()
+          this.systemBar.displayStatusBar(false)
+          this.bottomBarController.close()
         })
       )
     )
