@@ -1,29 +1,23 @@
 import { window } from '@kit.ArkUI'
+import { common } from '@kit.AbilityKit'
 
 type PresetBackground = 'white' | 'transparent'
 
 class SystemBar {
-  public mainWindow: window.Window | null = null
+  public mainWindow: window.Window
   private isShow: boolean = true
 
-  setMainWindow(mainWindow: window.Window): void {
-    this.mainWindow = mainWindow
+  constructor(context: common.UIAbilityContext) {
+    this.mainWindow = context.windowStage.getMainWindowSync()
   }
 
-  setFullScreen(full: boolean): Promise<void> {
-    if (this.mainWindow) {
-      return this.mainWindow.setWindowLayoutFullScreen(full)
-    }
-
-    return Promise.reject()
-  }
-
-  enableNaviBar(enable: boolean): void {
-    this.mainWindow?.setSpecificSystemBarEnabled('navigationIndicator', enable)
+  setFullScreen(full: boolean): void {
+    this.mainWindow.setWindowLayoutFullScreen(full)
+    this.mainWindow.setSpecificSystemBarEnabled('navigationIndicator', !full)
   }
 
   displayStatusBar(show: boolean, preset: PresetBackground = 'transparent'): void {
-    if (this.mainWindow && show !== this.isShow) {
+    if (show !== this.isShow) {
       this.isShow = show
 
       let barColor = '#00FFFFFF'
@@ -43,4 +37,4 @@ class SystemBar {
   }
 }
 
-export const systemBar = new SystemBar()
+export default SystemBar

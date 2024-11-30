@@ -2,7 +2,6 @@ import { AbilityConstant, UIAbility, Want } from '@kit.AbilityKit'
 import { hilog } from '@kit.PerformanceAnalysisKit'
 import { display, window } from '@kit.ArkUI'
 import { BusinessError } from '@kit.BasicServicesKit'
-import { systemBar } from '../common/SystemBar'
 import { myPreference } from '../common/MyPreference'
 import { myKVStore } from '../common/MyKVStore'
 
@@ -37,8 +36,6 @@ export default class EntryAbility extends UIAbility {
         return myKVStore.init(this.context)
       })
       .then(() => {
-        systemBar.setMainWindow(mainWindow)
-
         const displaySize: display.Display = display.getDefaultDisplaySync()
         const statusBar: window.AvoidArea = mainWindow.getWindowAvoidArea(window.AvoidAreaType.TYPE_SYSTEM)
         const naviBar: window.AvoidArea = mainWindow.getWindowAvoidArea(window.AvoidAreaType.TYPE_NAVIGATION_INDICATOR)
