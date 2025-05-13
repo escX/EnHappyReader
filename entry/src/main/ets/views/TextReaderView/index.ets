@@ -5,6 +5,7 @@ import TextLayoutManage, { SpanNode } from "./TextLayoutManage"
 import TextParser from "./TextParser"
 import { common } from "@kit.AbilityKit"
 import { window } from "@kit.ArkUI"
+import webQuery from "../webQuery"
 
 interface TextSpan extends SpanNode {
   pageIndex: number
@@ -37,6 +38,25 @@ export default struct TReaderView {
   private maxDownDistance: number = 0 // 最大向下滚动距离，等于所有页面高度和减去屏幕高度
   private isTextTop: boolean = false // 单次手势是否滚动到了顶部
   private isTextBottom: boolean = false // 单次手势是否滚动到了底部
+
+  @State queryStr: string = ''
+  private queryController: CustomDialogController = new CustomDialogController({
+    builder: webQuery({
+      queryStr: this.queryStr
+    }),
+    isModal: true,
+    maskColor: 'rgba(255, 255, 255, 0)',
+    alignment: DialogAlignment.TopStart,
+    width: '90%',
+    height: 300,
+    openAnimation: {tempo: 0, duration: 0},
+    // cornerRadius: {
+    //   topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0
+    // },
+    cancel: () => {
+      this.queryController.close()
+    }
+  })
 
   aboutToAppear() {
     this.markIndex = this.getMarkStore()
@@ -327,6 +347,10 @@ export default struct TReaderView {
       onMenuItemClick: (menuItem: TextMenuItem, textRange: TextRange) => {
         // todo: 翻译、收藏、分享
         if (menuItem.id.equals(TextMenuItemId.of('translate'))) {
+          const textString = this.spanArray.map((item) => item.content).join('')
+          this.queryStr = textString.slice(textRange.start, textRange.end)
+
+          this.queryController.open()
           return true
         }
 
